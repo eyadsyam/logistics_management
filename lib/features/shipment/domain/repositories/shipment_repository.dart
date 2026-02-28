@@ -71,4 +71,7 @@ abstract class ShipmentRepository {
 
   /// Stream location history for a shipment.
   Stream<List<LocationPoint>> streamLocationHistory(String shipmentId);
+
+  /// Clear (Delete) all completed shipments for a specific client.
+  Future<Either<Failure, void>> clearCompletedShipments(String clientId);
 }

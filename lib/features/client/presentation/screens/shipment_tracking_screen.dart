@@ -45,7 +45,11 @@ class _ShipmentTrackingScreenState
     _mapController = controller;
 
     _mapController!.location.updateSettings(
-      LocationComponentSettings(enabled: false),
+      LocationComponentSettings(
+        enabled: true,
+        pulsingEnabled: true,
+        pulsingColor: AppColors.primary.toARGB32(),
+      ),
     );
 
     // Listen for location history updates to animate map
@@ -132,7 +136,14 @@ class _ShipmentTrackingScreenState
         image: destIconBytes,
       );
 
-      await _poiPointManager!.createMulti([originMarker, destMarker]);
+      final List<PointAnnotationOptions> markers = [destMarker];
+      // Only show origin if the driver hasn't picked up the shipment yet.
+      // Otherwise, the route starts from the driver's live location.
+      if (shipment.status != AppConstants.statusInProgress) {
+        markers.add(originMarker);
+      }
+
+      await _poiPointManager!.createMulti(markers);
 
       List<Position> linePoints = [];
       if (shipment.polyline != null && shipment.polyline!.isNotEmpty) {

@@ -99,16 +99,53 @@ class _ClientHomeScreenState extends ConsumerState<ClientHomeScreen> {
                       'Your Shipments',
                       style: Theme.of(context).textTheme.headlineSmall,
                     ),
-                    if (_searchQuery.isNotEmpty)
-                      TextButton(
-                        onPressed: () {
-                          setState(() {
-                            _searchQuery = '';
-                            _searchController.clear();
-                          });
-                        },
-                        child: const Text('Clear Search'),
-                      ),
+                    Row(
+                      children: [
+                        if (_searchQuery.isNotEmpty) ...[
+                          TextButton(
+                            onPressed: () {
+                              setState(() {
+                                _searchQuery = '';
+                                _searchController.clear();
+                              });
+                            },
+                            child: const Text('Clear Search'),
+                          ),
+                        ],
+                        // Small button to clear completed shipments
+                        shipmentsAsync.when(
+                          data: (shipments) {
+                            final hasCompleted = shipments.any(
+                              (s) => s.status == AppConstants.statusCompleted,
+                            );
+                            if (hasCompleted) {
+                              return TextButton(
+                                onPressed: () {
+                                  ref
+                                      .read(shipmentRepositoryProvider)
+                                      .clearCompletedShipments(currentUser.id);
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text(
+                                        'Completed shipments cleared',
+                                      ),
+                                      backgroundColor: AppColors.success,
+                                    ),
+                                  );
+                                },
+                                child: const Text(
+                                  'Clear',
+                                  style: TextStyle(color: AppColors.error),
+                                ),
+                              );
+                            }
+                            return const SizedBox.shrink();
+                          },
+                          loading: () => const SizedBox.shrink(),
+                          error: (_, __) => const SizedBox.shrink(),
+                        ),
+                      ],
+                    ),
                   ],
                 ),
               ).animate().fadeIn(duration: 400.ms, delay: 300.ms),

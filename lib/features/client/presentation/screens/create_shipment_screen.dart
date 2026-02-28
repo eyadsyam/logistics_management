@@ -604,12 +604,18 @@ class _CreateShipmentScreenState extends ConsumerState<CreateShipmentScreen>
         SnackBar(
           content: const Row(
             children: [
-              Icon(Icons.check_circle, color: AppColors.success, size: 20),
+              Icon(Icons.check_circle, color: Colors.white, size: 20),
               SizedBox(width: 8),
-              Text('Shipment created successfully!'),
+              Text(
+                'Shipment created successfully!',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
             ],
           ),
-          backgroundColor: AppColors.cardElevated,
+          backgroundColor: AppColors.success,
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),

@@ -349,6 +349,28 @@ class ShipmentRepositoryImpl implements ShipmentRepository {
     return _mapToShipment(data);
   }
 
+  @override
+  Future<Either<Failure, void>> clearCompletedShipments(String clientId) async {
+    try {
+      final snapshot = await _firestore
+          .collection('shipments')
+          .where('clientId', isEqualTo: clientId)
+          .where('status', isEqualTo: AppConstants.statusCompleted)
+          .get();
+
+      final batch = _firestore.batch();
+      for (final doc in snapshot.docs) {
+        batch.delete(doc.reference);
+      }
+
+      await batch.commit();
+      return const Right(null);
+    } catch (e) {
+      _logger.e('Clear completed shipments error: $e');
+      return Left(ServerFailure(message: e.toString()));
+    }
+  }
+
   /// Map a Firestore data map to ShipmentModel, handling Timestamp conversions.
   ShipmentModel _mapToShipment(Map<String, dynamic> data) {
     // Convert Firestore timestamps to ISO strings for Freezed
