@@ -1,0 +1,128 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ────────────────────────────────────────
+    // HELPER FUNCTIONS
+    // ────────────────────────────────────────
+
+    // Check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Get user's role from Firestore
+    // NOTE: Do NOT call this from rules that guard the /users collection
+    //       to avoid circular reads.
+    function getUserRole() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
+    }
+
+    // Check if user is admin (only use on non-users collections)
+    function isAdmin() {
+      return isAuthenticated() && getUserRole() == 'admin';
+    }
+
+    // Check if user is the document owner
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // ────────────────────────────────────────
+    // USERS COLLECTION
+    // No getUserRole() here to avoid circular reads
+    // ────────────────────────────────────────
+    match /users/{userId} {
+      // Users can read their own profile
+      // Any authenticated user can read any user profile (needed for
+      // driver info display in tracking, admin checks, etc.)
+      allow read: if isAuthenticated();
+
+      // Users can create their own profile during registration
+      allow create: if isOwner(userId);
+
+      // Users can update their own profile
+      // Admin check done via custom claim or direct uid match
+      allow update: if isOwner(userId);
+
+      // Only admins can delete users
+      allow delete: if isAdmin();
+    }
+
+    // ────────────────────────────────────────
+    // DRIVERS COLLECTION
+    // ────────────────────────────────────────
+    match /drivers/{driverId} {
+      // Drivers can read their own profile
+      // Clients and admins can see online drivers for assignment
+      allow read: if isAuthenticated();
+
+      // Only the driver can create their profile during registration
+      allow create: if isOwner(driverId);
+
+      // Driver can update their own, admin can update any
+      allow update: if isOwner(driverId) || isAdmin();
+
+      // Only admins can delete driver profiles
+      allow delete: if isAdmin();
+    }
+
+    // ────────────────────────────────────────
+    // SHIPMENTS COLLECTION
+    // ────────────────────────────────────────
+    match /shipments/{shipmentId} {
+      // Client can read their own shipments
+      // Driver can read shipments assigned to them or pending ones
+      // Admin can read all
+      allow read: if isAuthenticated() && (
+        resource.data.clientId == request.auth.uid ||
+        resource.data.driverId == request.auth.uid ||
+        (resource.data.status == 'pending' && getUserRole() == 'driver') ||
+        isAdmin()
+      );
+
+      // Only authenticated clients can create shipments
+      allow create: if isAuthenticated() &&
+        getUserRole() == 'client' &&
+        request.resource.data.clientId == request.auth.uid &&
+        request.resource.data.status == 'pending';
+
+      // Driver can update only their assigned shipment
+      // Client can only cancel their pending shipments
+      // Admin can update any shipment
+      allow update: if isAuthenticated() && (
+        // Driver updating their assigned shipment
+        (resource.data.driverId == request.auth.uid && getUserRole() == 'driver') ||
+        // Driver accepting a pending shipment
+        (resource.data.status == 'pending' && getUserRole() == 'driver' &&
+         request.resource.data.driverId == request.auth.uid) ||
+        // Client cancelling their pending shipment
+        (resource.data.clientId == request.auth.uid &&
+         resource.data.status == 'pending' &&
+         request.resource.data.status == 'cancelled') ||
+        // Admin can update anything
+        isAdmin()
+      );
+
+      // Only admins can delete shipments
+      allow delete: if isAdmin();
+
+      // ── Location History Subcollection ──
+      match /location_history/{pointId} {
+        // Driver can write to location history of their assigned shipment
+        // Client and admin can read
+        allow read: if isAuthenticated() && (
+          get(/databases/$(database)/documents/shipments/$(shipmentId)).data.clientId == request.auth.uid ||
+          get(/databases/$(database)/documents/shipments/$(shipmentId)).data.driverId == request.auth.uid ||
+          isAdmin()
+        );
+
+        allow create: if isAuthenticated() &&
+          get(/databases/$(database)/documents/shipments/$(shipmentId)).data.driverId == request.auth.uid;
+
+        // No one can update or delete location history
+        allow update, delete: if false;
+      }
+    }
+  }
+}
