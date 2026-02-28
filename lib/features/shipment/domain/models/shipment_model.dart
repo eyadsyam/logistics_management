@@ -23,6 +23,7 @@ abstract class ShipmentModel with _$ShipmentModel {
     String? clientName,
     String? driverName,
     String? notes,
+    @Default(false) bool isCleared,
   }) = _ShipmentModel;
 
   factory ShipmentModel.fromJson(Map<String, dynamic> json) =>

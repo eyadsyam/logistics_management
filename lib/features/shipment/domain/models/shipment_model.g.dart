@@ -34,6 +34,7 @@ _$ShipmentModelImpl _$$ShipmentModelImplFromJson(Map<String, dynamic> json) =>
       clientName: json['clientName'] as String?,
       driverName: json['driverName'] as String?,
       notes: json['notes'] as String?,
+      isCleared: json['isCleared'] as bool? ?? false,
     );
 
 Map<String, dynamic> _$$ShipmentModelImplToJson(_$ShipmentModelImpl instance) =>
@@ -54,6 +55,7 @@ Map<String, dynamic> _$$ShipmentModelImplToJson(_$ShipmentModelImpl instance) =>
       'clientName': instance.clientName,
       'driverName': instance.driverName,
       'notes': instance.notes,
+      'isCleared': instance.isCleared,
     };
 
 _$ShipmentLocationImpl _$$ShipmentLocationImplFromJson(

@@ -304,4 +304,19 @@ class MockShipmentRepository extends _i1.Mock
             returnValue: _i4.Stream<List<_i6.LocationPoint>>.empty(),
           )
           as _i4.Stream<List<_i6.LocationPoint>>);
+
+  @override
+  _i4.Future<_i2.Either<_i5.Failure, void>> clearCompletedShipments(
+    String? clientId,
+  ) =>
+      (super.noSuchMethod(
+            Invocation.method(#clearCompletedShipments, [clientId]),
+            returnValue: _i4.Future<_i2.Either<_i5.Failure, void>>.value(
+              _FakeEither_0<_i5.Failure, void>(
+                this,
+                Invocation.method(#clearCompletedShipments, [clientId]),
+              ),
+            ),
+          )
+          as _i4.Future<_i2.Either<_i5.Failure, void>>);
 }

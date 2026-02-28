@@ -31,6 +31,7 @@ class ClientHomeScreen extends ConsumerStatefulWidget {
 class _ClientHomeScreenState extends ConsumerState<ClientHomeScreen> {
   String _searchQuery = '';
   final _searchController = TextEditingController();
+  bool _showHistory = false;
 
   @override
   void dispose() {
@@ -115,31 +116,62 @@ class _ClientHomeScreenState extends ConsumerState<ClientHomeScreen> {
                         // Small button to clear completed shipments
                         shipmentsAsync.when(
                           data: (shipments) {
-                            final hasCompleted = shipments.any(
-                              (s) => s.status == AppConstants.statusCompleted,
+                            final hasCompletedUncleared = shipments.any(
+                              (s) =>
+                                  (s.status == AppConstants.statusCompleted ||
+                                      s.status ==
+                                          AppConstants.statusCancelled) &&
+                                  !s.isCleared,
                             );
-                            if (hasCompleted) {
-                              return TextButton(
-                                onPressed: () {
-                                  ref
-                                      .read(shipmentRepositoryProvider)
-                                      .clearCompletedShipments(currentUser.id);
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text(
-                                        'Completed shipments cleared',
-                                      ),
-                                      backgroundColor: AppColors.success,
+                            final hasClearedHistory = shipments.any(
+                              (s) => s.isCleared,
+                            );
+
+                            return Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                if (hasCompletedUncleared)
+                                  TextButton(
+                                    onPressed: () {
+                                      ref
+                                          .read(shipmentRepositoryProvider)
+                                          .clearCompletedShipments(
+                                            currentUser.id,
+                                          );
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        const SnackBar(
+                                          content: Text(
+                                            'Shipments moved to history',
+                                          ),
+                                          backgroundColor: AppColors.success,
+                                        ),
+                                      );
+                                    },
+                                    child: const Text(
+                                      'Clear',
+                                      style: TextStyle(color: AppColors.error),
                                     ),
-                                  );
-                                },
-                                child: const Text(
-                                  'Clear',
-                                  style: TextStyle(color: AppColors.error),
-                                ),
-                              );
-                            }
-                            return const SizedBox.shrink();
+                                  ),
+                                if (hasClearedHistory)
+                                  TextButton(
+                                    onPressed: () {
+                                      setState(() {
+                                        _showHistory = !_showHistory;
+                                      });
+                                    },
+                                    child: Text(
+                                      _showHistory
+                                          ? 'Hide History'
+                                          : 'Show History',
+                                      style: const TextStyle(
+                                        color: AppColors.primary,
+                                      ),
+                                    ),
+                                  ),
+                              ],
+                            );
                           },
                           loading: () => const SizedBox.shrink(),
                           error: (_, __) => const SizedBox.shrink(),
@@ -157,6 +189,7 @@ class _ClientHomeScreenState extends ConsumerState<ClientHomeScreen> {
                 child: shipmentsAsync.when(
                   data: (shipments) {
                     final filtered = shipments.where((s) {
+                      if (!_showHistory && s.isCleared) return false;
                       final query = _searchQuery.toLowerCase();
                       return s.origin.address.toLowerCase().contains(query) ||
                           s.destination.address.toLowerCase().contains(query) ||

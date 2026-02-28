@@ -387,8 +387,9 @@ class ShipmentRepositoryImpl implements ShipmentRepository {
 
       final batch = _firestore.batch();
       for (final doc in snapshot.docs) {
-        if (doc.data()['status'] == AppConstants.statusCompleted) {
-          batch.delete(doc.reference);
+        if (doc.data()['status'] == AppConstants.statusCompleted ||
+            doc.data()['status'] == AppConstants.statusCancelled) {
+          batch.update(doc.reference, {'isCleared': true});
         }
       }
 

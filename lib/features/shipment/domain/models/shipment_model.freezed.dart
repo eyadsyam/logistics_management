@@ -37,6 +37,7 @@ mixin _$ShipmentModel {
   String? get clientName => throw _privateConstructorUsedError;
   String? get driverName => throw _privateConstructorUsedError;
   String? get notes => throw _privateConstructorUsedError;
+  bool get isCleared => throw _privateConstructorUsedError;
 
   /// Serializes this ShipmentModel to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
@@ -72,6 +73,7 @@ abstract class $ShipmentModelCopyWith<$Res> {
     String? clientName,
     String? driverName,
     String? notes,
+    bool isCleared,
   });
 
   $ShipmentLocationCopyWith<$Res> get origin;
@@ -109,6 +111,7 @@ class _$ShipmentModelCopyWithImpl<$Res, $Val extends ShipmentModel>
     Object? clientName = freezed,
     Object? driverName = freezed,
     Object? notes = freezed,
+    Object? isCleared = null,
   }) {
     return _then(
       _value.copyWith(
@@ -176,6 +179,10 @@ class _$ShipmentModelCopyWithImpl<$Res, $Val extends ShipmentModel>
                 ? _value.notes
                 : notes // ignore: cast_nullable_to_non_nullable
                       as String?,
+            isCleared: null == isCleared
+                ? _value.isCleared
+                : isCleared // ignore: cast_nullable_to_non_nullable
+                      as bool,
           )
           as $Val,
     );
@@ -228,6 +235,7 @@ abstract class _$$ShipmentModelImplCopyWith<$Res>
     String? clientName,
     String? driverName,
     String? notes,
+    bool isCleared,
   });
 
   @override
@@ -266,6 +274,7 @@ class __$$ShipmentModelImplCopyWithImpl<$Res>
     Object? clientName = freezed,
     Object? driverName = freezed,
     Object? notes = freezed,
+    Object? isCleared = null,
   }) {
     return _then(
       _$ShipmentModelImpl(
@@ -333,6 +342,10 @@ class __$$ShipmentModelImplCopyWithImpl<$Res>
             ? _value.notes
             : notes // ignore: cast_nullable_to_non_nullable
                   as String?,
+        isCleared: null == isCleared
+            ? _value.isCleared
+            : isCleared // ignore: cast_nullable_to_non_nullable
+                  as bool,
       ),
     );
   }
@@ -358,6 +371,7 @@ class _$ShipmentModelImpl implements _ShipmentModel {
     this.clientName,
     this.driverName,
     this.notes,
+    this.isCleared = false,
   });
 
   factory _$ShipmentModelImpl.fromJson(Map<String, dynamic> json) =>
@@ -397,10 +411,13 @@ class _$ShipmentModelImpl implements _ShipmentModel {
   final String? driverName;
   @override
   final String? notes;
+  @override
+  @JsonKey()
+  final bool isCleared;
 
   @override
   String toString() {
-    return 'ShipmentModel(id: $id, clientId: $clientId, driverId: $driverId, status: $status, origin: $origin, destination: $destination, polyline: $polyline, distanceMeters: $distanceMeters, durationSeconds: $durationSeconds, etaTimestamp: $etaTimestamp, createdAt: $createdAt, startedAt: $startedAt, completedAt: $completedAt, clientName: $clientName, driverName: $driverName, notes: $notes)';
+    return 'ShipmentModel(id: $id, clientId: $clientId, driverId: $driverId, status: $status, origin: $origin, destination: $destination, polyline: $polyline, distanceMeters: $distanceMeters, durationSeconds: $durationSeconds, etaTimestamp: $etaTimestamp, createdAt: $createdAt, startedAt: $startedAt, completedAt: $completedAt, clientName: $clientName, driverName: $driverName, notes: $notes, isCleared: $isCleared)';
   }
 
   @override
@@ -435,7 +452,9 @@ class _$ShipmentModelImpl implements _ShipmentModel {
                 other.clientName == clientName) &&
             (identical(other.driverName, driverName) ||
                 other.driverName == driverName) &&
-            (identical(other.notes, notes) || other.notes == notes));
+            (identical(other.notes, notes) || other.notes == notes) &&
+            (identical(other.isCleared, isCleared) ||
+                other.isCleared == isCleared));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
@@ -458,6 +477,7 @@ class _$ShipmentModelImpl implements _ShipmentModel {
     clientName,
     driverName,
     notes,
+    isCleared,
   );
 
   /// Create a copy of ShipmentModel
@@ -492,6 +512,7 @@ abstract class _ShipmentModel implements ShipmentModel {
     final String? clientName,
     final String? driverName,
     final String? notes,
+    final bool isCleared,
   }) = _$ShipmentModelImpl;
 
   factory _ShipmentModel.fromJson(Map<String, dynamic> json) =
@@ -529,6 +550,8 @@ abstract class _ShipmentModel implements ShipmentModel {
   String? get driverName;
   @override
   String? get notes;
+  @override
+  bool get isCleared;
 
   /// Create a copy of ShipmentModel
   /// with the given fields replaced by the non-null parameter values.
