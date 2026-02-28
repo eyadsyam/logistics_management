@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="assets/images/screenshots/banner.png" alt="Edita Logistics Banner" width="100%">
+</p>
+
 # Edita Logistics - The Ultimate Fleet Management Companion
 
 Edita Logistics is a smart, real-time application designed to streamline shipment delivery, tracking, and fleet management. It brings together powerful Mapbox routing algorithms with real-time Firebase synchronization to provide a seamless "Uber-like" experience for both drivers and clients.
@@ -22,6 +26,21 @@ Edita Logistics is a smart, real-time application designed to streamline shipmen
 
 ## 📱 App Screenshots
 Experience the modern design and fluid animations of Edita Logistics with live car mapping, stunning bottom sheets, and interactive snackbars.
+
+<table align="center">
+  <tr>
+    <td align="center"><img src="assets/images/screenshots/Log in.png" width="200"><br><b>Log In</b></td>
+    <td align="center"><img src="assets/images/screenshots/Home (client).png" width="200"><br><b>Client Home</b></td>
+    <td align="center"><img src="assets/images/screenshots/Home (driver).png" width="200"><br><b>Driver Home</b></td>
+    <td align="center"><img src="assets/images/screenshots/New Shipment.png" width="200"><br><b>New Shipment</b></td>
+  </tr>
+  <tr>
+    <td align="center"><img src="assets/images/screenshots/Route (client).png" width="200"><br><b>Live Tracking (Client)</b></td>
+    <td align="center"><img src="assets/images/screenshots/Route (driver).png" width="200"><br><b>Live Tracking (Driver)</b></td>
+    <td align="center"><img src="assets/images/screenshots/profile.png" width="200"><br><b>User Profile</b></td>
+    <td align="center"><img src="assets/images/screenshots/Sign up.png" width="200"><br><b>Sign Up</b></td>
+  </tr>
+</table>
 
 ## 🏁 Getting Started
 1. Clone the repository:
