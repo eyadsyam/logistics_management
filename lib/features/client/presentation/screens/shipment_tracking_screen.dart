@@ -33,6 +33,7 @@ class _ShipmentTrackingScreenState
   PointAnnotationManager? _driverPointManager;
   PointAnnotation? _driverAnnotation;
   String? _drawnShipmentId;
+  String? _drawnPolyline;
 
   @override
   void dispose() {
@@ -240,8 +241,10 @@ class _ShipmentTrackingScreenState
           final shipment = snapshot.data!;
 
           if (_drawnShipmentId != shipment.id ||
+              _drawnPolyline != shipment.polyline ||
               (_drawnShipmentId == shipment.id && _polylineManager == null)) {
             _drawnShipmentId = shipment.id;
+            _drawnPolyline = shipment.polyline;
             _drawShipmentRoute(shipment);
           }
 

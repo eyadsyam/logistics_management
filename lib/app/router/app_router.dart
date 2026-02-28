@@ -12,6 +12,7 @@ import '../../features/client/presentation/screens/client_home_screen.dart';
 import '../../features/client/presentation/screens/shipment_tracking_screen.dart';
 import '../../features/driver/presentation/screens/driver_home_screen.dart';
 import '../../features/driver/presentation/screens/driver_trip_screen.dart';
+import '../../features/splash/presentation/screens/splash_screen.dart';
 import '../providers/app_providers.dart';
 
 /// GoRouter configuration with role-based routing and auth guards.
@@ -20,18 +21,22 @@ final routerProvider = Provider<GoRouter>((ref) {
   final currentUser = ref.watch(currentUserProvider);
 
   return GoRouter(
-    initialLocation: '/login',
+    initialLocation: '/splash',
     debugLogDiagnostics: true,
     redirect: (context, state) {
+      final isSplash = state.uri.path == '/splash';
       final isAuthRoute =
           state.uri.path == '/login' || state.uri.path == '/register';
 
-      // If authenticated, redirect from auth routes to role-based home
+      // Keep them on Splash until initialization finishes and nav occurs
+      if (isSplash) return null;
+
+      // If authenticated and trying to hit auth routes, redirect to home
       if (currentUser != null && isAuthRoute) {
         return _getHomeRoute(currentUser.role);
       }
 
-      // If not authenticated, redirect to login
+      // If not authenticated and not on splash or auth routes, force login
       if (currentUser == null && !isAuthRoute) {
         return '/login';
       }
@@ -39,6 +44,13 @@ final routerProvider = Provider<GoRouter>((ref) {
       return null;
     },
     routes: [
+      // ── Splash Route ──
+      GoRoute(
+        path: '/splash',
+        name: 'splash',
+        builder: (context, state) => const SplashScreen(),
+      ),
+
       // ── Auth Routes ──
       GoRoute(
         path: '/login',

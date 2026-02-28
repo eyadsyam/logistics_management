@@ -32,6 +32,7 @@ class _DriverTripScreenState extends ConsumerState<DriverTripScreen> {
   PointAnnotationManager? _driverPointManager;
   PointAnnotation? _driverAnnotation;
   String? _drawnShipmentId;
+  String? _drawnPolyline;
 
   bool _isTripStarted = false;
   bool _isProcessing = false;
@@ -425,8 +426,10 @@ class _DriverTripScreenState extends ConsumerState<DriverTripScreen> {
           _isTripStarted = shipment.status == AppConstants.statusInProgress;
 
           if (_drawnShipmentId != shipment.id ||
+              _drawnPolyline != shipment.polyline ||
               (_drawnShipmentId == shipment.id && _polylineManager == null)) {
             _drawnShipmentId = shipment.id;
+            _drawnPolyline = shipment.polyline;
             _drawShipmentRoute(shipment);
           }
 
