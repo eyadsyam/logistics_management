@@ -331,68 +331,7 @@ class _ShipmentTrackingScreenState
                   top: MediaQuery.of(context).padding.top + 80,
                   left: 20,
                   right: 20,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 12,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(20),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.15),
-                          blurRadius: 10,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 10,
-                            vertical: 6,
-                          ),
-                          decoration: BoxDecoration(
-                            color: AppColors.primary,
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Text(
-                            '${(shipment.durationSeconds / 60).round()} min',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 18,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Text(
-                              'Driver is on the way',
-                              style: TextStyle(
-                                color: Colors.black,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 15,
-                              ),
-                            ),
-                            Text(
-                              '${(shipment.distanceMeters / 1000).toStringAsFixed(1)} km away • ETA ${shipment.etaTimestamp != null ? DateFormat('hh:mm a').format(shipment.etaTimestamp!) : ''}',
-                              style: const TextStyle(
-                                color: Colors.black54,
-                                fontSize: 13,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ).animate().fadeIn(duration: 400.ms).slideY(begin: -0.2),
+                  child: _buildLiveTrackingCard(shipment),
                 ),
 
               // ── Bottom Info Panel ──
@@ -407,6 +346,73 @@ class _ShipmentTrackingScreenState
         },
       ),
     );
+  }
+
+  Widget _buildLiveTrackingCard(ShipmentModel shipment) {
+    final bool hasData =
+        shipment.durationSeconds > 0 && shipment.distanceMeters > 0;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.15),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            decoration: BoxDecoration(
+              color: AppColors.primary,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Text(
+              hasData
+                  ? '${(shipment.durationSeconds / 60).round()} min'
+                  : '...',
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                fontSize: 18,
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  hasData ? 'Driver is on the way' : 'Connecting to Driver...',
+                  style: const TextStyle(
+                    color: Colors.black,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 15,
+                  ),
+                ),
+                Text(
+                  hasData
+                      ? '${(shipment.distanceMeters / 1000).toStringAsFixed(1)} km away • ETA ${shipment.etaTimestamp != null ? DateFormat('hh:mm a').format(shipment.etaTimestamp!) : ''}'
+                      : 'Fetching live location...',
+                  style: const TextStyle(color: Colors.black54, fontSize: 13),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    ).animate().fadeIn(duration: 400.ms).slideY(begin: -0.2);
   }
 
   Widget _buildBackButton(BuildContext context) {

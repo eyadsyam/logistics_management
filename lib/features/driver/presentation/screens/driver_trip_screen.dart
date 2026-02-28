@@ -172,9 +172,25 @@ class _DriverTripScreenState extends ConsumerState<DriverTripScreen> {
           );
         }
       },
-      (_) {
+      (_) async {
         setState(() => _isTripStarted = true);
-        ref.read(locationServiceProvider).startTracking();
+        final locService = ref.read(locationServiceProvider);
+        locService.startTracking();
+
+        // 🚀 Fix: immediately pulse a location update to calculate route and ETA
+        // without waiting for the driver to move 40 meters.
+        final currentPos = await locService.getCurrentPosition();
+        if (currentPos != null && locService.onLocationUpdate != null) {
+          locService.onLocationUpdate!(
+            LocationPoint(
+              latitude: currentPos.latitude,
+              longitude: currentPos.longitude,
+              speed: currentPos.speed,
+              accuracy: currentPos.accuracy,
+              timestamp: currentPos.timestamp,
+            ),
+          );
+        }
       },
     );
 

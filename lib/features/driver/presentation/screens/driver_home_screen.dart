@@ -5,7 +5,6 @@ import 'package:geolocator/geolocator.dart';
 
 import '../../../../app/providers/app_providers.dart';
 import '../../../../core/constants/app_colors.dart';
-import '../../../auth/presentation/state/auth_state.dart';
 import '../../../driver/domain/models/driver_model.dart';
 import '../../../shipment/domain/models/shipment_model.dart';
 import '../../../shipment/domain/usecases/accept_shipment_usecase.dart';
