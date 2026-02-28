@@ -104,8 +104,12 @@ service cloud.firestore {
         isAdmin()
       );
 
-      // Only admins can delete shipments
-      allow delete: if isAdmin();
+      // Admins can delete shipments, Clients can delete their own completed shipments
+      allow delete: if isAdmin() || (
+        isAuthenticated() && 
+        resource.data.clientId == request.auth.uid && 
+        resource.data.status == 'completed'
+      );
 
       // ── Location History Subcollection ──
       match /location_history/{pointId} {
