@@ -88,10 +88,14 @@ class ShipmentRepositoryImpl implements ShipmentRepository {
     try {
       final snapshot = await _shipmentsRef
           .where('clientId', isEqualTo: clientId)
-          .orderBy('createdAt', descending: true)
           .get();
 
       final shipments = snapshot.docs.map(_docToShipment).toList();
+      shipments.sort(
+        (a, b) => (b.createdAt ?? DateTime.now()).compareTo(
+          a.createdAt ?? DateTime.now(),
+        ),
+      );
       return Right(shipments);
     } catch (e) {
       _logger.e('Get client shipments error: $e');
@@ -101,11 +105,17 @@ class ShipmentRepositoryImpl implements ShipmentRepository {
 
   @override
   Stream<List<ShipmentModel>> streamClientShipments(String clientId) {
-    return _shipmentsRef
-        .where('clientId', isEqualTo: clientId)
-        .orderBy('createdAt', descending: true)
-        .snapshots()
-        .map((snapshot) => snapshot.docs.map(_docToShipment).toList());
+    return _shipmentsRef.where('clientId', isEqualTo: clientId).snapshots().map(
+      (snapshot) {
+        final list = snapshot.docs.map(_docToShipment).toList();
+        list.sort(
+          (a, b) => (b.createdAt ?? DateTime.now()).compareTo(
+            a.createdAt ?? DateTime.now(),
+          ),
+        );
+        return list;
+      },
+    );
   }
 
   @override
@@ -113,10 +123,14 @@ class ShipmentRepositoryImpl implements ShipmentRepository {
     try {
       final snapshot = await _shipmentsRef
           .where('status', isEqualTo: AppConstants.statusPending)
-          .orderBy('createdAt', descending: false)
           .get();
 
       final shipments = snapshot.docs.map(_docToShipment).toList();
+      shipments.sort(
+        (a, b) => (a.createdAt ?? DateTime.now()).compareTo(
+          b.createdAt ?? DateTime.now(),
+        ),
+      );
       return Right(shipments);
     } catch (e) {
       _logger.e('Get pending shipments error: $e');
@@ -128,9 +142,16 @@ class ShipmentRepositoryImpl implements ShipmentRepository {
   Stream<List<ShipmentModel>> streamPendingShipments() {
     return _shipmentsRef
         .where('status', isEqualTo: AppConstants.statusPending)
-        .orderBy('createdAt', descending: false)
         .snapshots()
-        .map((snapshot) => snapshot.docs.map(_docToShipment).toList());
+        .map((snapshot) {
+          final list = snapshot.docs.map(_docToShipment).toList();
+          list.sort(
+            (a, b) => (a.createdAt ?? DateTime.now()).compareTo(
+              b.createdAt ?? DateTime.now(),
+            ),
+          );
+          return list;
+        });
   }
 
   @override
@@ -160,9 +181,16 @@ class ShipmentRepositoryImpl implements ShipmentRepository {
             AppConstants.statusInProgress,
           ],
         )
-        .orderBy('createdAt', descending: true)
         .snapshots()
-        .map((snapshot) => snapshot.docs.map(_docToShipment).toList());
+        .map((snapshot) {
+          final list = snapshot.docs.map(_docToShipment).toList();
+          list.sort(
+            (a, b) => (b.createdAt ?? DateTime.now()).compareTo(
+              a.createdAt ?? DateTime.now(),
+            ),
+          );
+          return list;
+        });
   }
 
   @override
@@ -355,12 +383,13 @@ class ShipmentRepositoryImpl implements ShipmentRepository {
       final snapshot = await _firestore
           .collection('shipments')
           .where('clientId', isEqualTo: clientId)
-          .where('status', isEqualTo: AppConstants.statusCompleted)
           .get();
 
       final batch = _firestore.batch();
       for (final doc in snapshot.docs) {
-        batch.delete(doc.reference);
+        if (doc.data()['status'] == AppConstants.statusCompleted) {
+          batch.delete(doc.reference);
+        }
       }
 
       await batch.commit();
