@@ -1,0 +1,17 @@
+# Ignore all paths except lib/ to force Dart as the primary language on GitHub statistics
+windows/** linguist-vendored
+macos/** linguist-vendored
+linux/** linguist-vendored
+android/** linguist-vendored
+ios/** linguist-vendored
+web/** linguist-vendored
+*.c linguist-detectable=false
+*.cpp linguist-detectable=false
+*.h linguist-detectable=false
+*.cc linguist-detectable=false
+*.html linguist-detectable=false
+*.js linguist-detectable=false
+*.cmake linguist-detectable=false
+*.swift linguist-detectable=false
+*.xml linguist-detectable=false
+*.plist linguist-detectable=false
