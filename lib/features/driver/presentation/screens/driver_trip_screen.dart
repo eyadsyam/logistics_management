@@ -423,15 +423,13 @@ class _DriverTripScreenState extends ConsumerState<DriverTripScreen> {
                   mapOptions: MapOptions(
                     pixelRatio: MediaQuery.of(context).devicePixelRatio,
                   ),
-                  styleUri:
-                      'mapbox://styles/mapbox/navigation-night-v1', // Dark navigation style
+                  styleUri: AppConstants.mapboxStyleUrl,
                   onMapCreated: (controller) {
                     _mapController = controller;
                     _mapController!.location.updateSettings(
                       LocationComponentSettings(
-                        enabled: true,
-                        pulsingEnabled: true,
-                        pulsingColor: AppColors.primary.toARGB32(),
+                        enabled:
+                            false, // Turn off native dot so only Custom Car shows up
                       ),
                     );
                   },
@@ -442,86 +440,10 @@ class _DriverTripScreenState extends ConsumerState<DriverTripScreen> {
                         shipment.origin.latitude,
                       ),
                     ),
-                    zoom: 16.5,
-                    pitch: 50.0,
+                    zoom: 15.5,
                   ),
                 ),
               ),
-
-              // ── Top Navigation Banner (Google Maps Style) ──
-              if (_isTripStarted)
-                Positioned(
-                  top: MediaQuery.of(context).padding.top + 16,
-                  left: 16,
-                  right: 16,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 16,
-                    ),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF0F5132), // Dark Google Maps green
-                      borderRadius: BorderRadius.circular(16),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.3),
-                          blurRadius: 10,
-                          offset: const Offset(0, 5),
-                        ),
-                      ],
-                    ),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Padding(
-                          padding: EdgeInsets.only(top: 4.0),
-                          child: Icon(
-                            Icons.turn_right_rounded,
-                            color: Colors.white,
-                            size: 36,
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text(
-                                'towards',
-                                style: TextStyle(
-                                  color: Colors.white70,
-                                  fontSize: 14,
-                                ),
-                              ),
-                              Text(
-                                shipment.destination.address.split(',').first,
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 22,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ],
-                          ),
-                        ),
-                        Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: const BoxDecoration(
-                            color: Colors.white,
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(
-                            Icons.mic,
-                            color: Colors.black,
-                            size: 20,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
 
               // ── Back Button ──
               Positioned(
@@ -755,12 +677,22 @@ class _DriverTripScreenState extends ConsumerState<DriverTripScreen> {
   }
 
   Widget _buildNavigationPanel(BuildContext context, ShipmentModel shipment) {
-    // Determine ETA time
-    final etaTime = DateTime.now().add(
-      Duration(seconds: shipment.durationSeconds),
-    );
-    final formatTime =
-        '${etaTime.hour > 12 ? etaTime.hour - 12 : (etaTime.hour == 0 ? 12 : etaTime.hour)}:${etaTime.minute.toString().padLeft(2, '0')} ${etaTime.hour >= 12 ? 'pm' : 'am'}';
+    // Determine ETA time dynamically (if 0 or uncalculated, we show placeholders)
+    final bool hasData =
+        shipment.durationSeconds > 0 && shipment.distanceMeters > 0;
+    String minStr = 'Calculating...';
+    String kmStr = '- km';
+    String formatTime = '--:--';
+
+    if (hasData) {
+      final etaTime = DateTime.now().add(
+        Duration(seconds: shipment.durationSeconds),
+      );
+      formatTime =
+          '${etaTime.hour > 12 ? etaTime.hour - 12 : (etaTime.hour == 0 ? 12 : etaTime.hour)}:${etaTime.minute.toString().padLeft(2, '0')} ${etaTime.hour >= 12 ? 'pm' : 'am'}';
+      minStr = '${(shipment.durationSeconds / 60).round()} min';
+      kmStr = '${(shipment.distanceMeters / 1000).toStringAsFixed(1)} km';
+    }
 
     return Container(
       padding: EdgeInsets.fromLTRB(
@@ -770,18 +702,39 @@ class _DriverTripScreenState extends ConsumerState<DriverTripScreen> {
         MediaQuery.of(context).padding.bottom + 20,
       ),
       decoration: BoxDecoration(
-        color: const Color(0xFF1E1E1E), // Dark navigation panel
+        color: AppColors.cardLight.withValues(alpha: 0.95), // Bright App Theme
         borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        border: const Border(
+          top: BorderSide(color: AppColors.glassBorder, width: 0.5),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.1),
+            blurRadius: 10,
+            offset: const Offset(0, -2),
+          ),
+        ],
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
+          Center(
+            child: Container(
+              width: 40,
+              height: 4,
+              margin: const EdgeInsets.only(bottom: 16),
+              decoration: BoxDecoration(
+                color: Colors.grey.shade300,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+          ),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               IconButton(
-                icon: const Icon(Icons.close, color: Colors.white, size: 28),
+                icon: const Icon(Icons.close, color: AppColors.error, size: 28),
                 onPressed: () => Navigator.of(context).pop(),
               ),
               Column(
@@ -791,28 +744,44 @@ class _DriverTripScreenState extends ConsumerState<DriverTripScreen> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
-                        '${(shipment.durationSeconds / 60).round()} min',
+                        minStr,
                         style: const TextStyle(
-                          color: Color(0xFFFF6A5D), // Light Red/Orange text
+                          color: AppColors.primary, // Orange primary text
                           fontSize: 32,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      const SizedBox(width: 6),
-                      const Icon(Icons.eco, color: Colors.green, size: 24),
+                      const SizedBox(width: 8),
+                      // Small delivery truck icon
+                      if (hasData)
+                        const Icon(
+                          Icons.local_shipping,
+                          color: AppColors.success,
+                          size: 24,
+                        ),
                     ],
                   ),
                   const SizedBox(height: 4),
-                  Text(
-                    '${(shipment.distanceMeters / 1000).toStringAsFixed(1)} km • $formatTime',
-                    style: const TextStyle(color: Colors.white70, fontSize: 16),
-                  ),
+                  if (hasData)
+                    Text(
+                      '$kmStr • $formatTime',
+                      style: const TextStyle(
+                        color: AppColors.textHint,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    )
+                  else
+                    const Text(
+                      'Fetching actual route...',
+                      style: TextStyle(color: AppColors.textHint),
+                    ),
                 ],
               ),
               IconButton(
                 icon: const Icon(
                   Icons.alt_route,
-                  color: Colors.white,
+                  color: AppColors.accent,
                   size: 28,
                 ),
                 onPressed: () {},

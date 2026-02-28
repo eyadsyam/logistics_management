@@ -44,11 +44,7 @@ class _ShipmentTrackingScreenState
     _mapController = controller;
 
     _mapController!.location.updateSettings(
-      LocationComponentSettings(
-        enabled: true,
-        pulsingEnabled: true,
-        pulsingColor: AppColors.primary.toARGB32(),
-      ),
+      LocationComponentSettings(enabled: false),
     );
 
     // Listen for location history updates to animate map

@@ -107,7 +107,7 @@ class MapMarkerUtil {
     return bytes!.buffer.asUint8List();
   }
 
-  /// Draws a square marker with an inner dot (Uber Origin style).
+  /// Draws a sleek circular start marker (white inner dot with orange border).
   static Future<Uint8List> getOriginMarkerBytes({int size = 60}) async {
     final ui.PictureRecorder recorder = ui.PictureRecorder();
     final Canvas canvas = Canvas(recorder);
@@ -116,14 +116,15 @@ class MapMarkerUtil {
     final double height = size.toDouble();
     final center = Offset(width / 2, height / 2);
 
-    final bgPaint = Paint()..color = Colors.black;
-    final dotPaint = Paint()..color = Colors.white;
+    final bgPaint = Paint()..color = const Color(0xFFFCA311); // Orange
+    final innerPaint = Paint()..color = Colors.white;
 
-    canvas.drawRect(
-      Rect.fromCenter(center: center, width: width, height: height),
-      bgPaint,
-    );
-    canvas.drawCircle(center, width * 0.15, dotPaint);
+    // Draw an orange circle background
+    canvas.drawCircle(center, width * 0.45, bgPaint);
+    // Draw a larger white circle inside to make an orange ring
+    canvas.drawCircle(center, width * 0.35, innerPaint);
+    // Draw an inner orange dot
+    canvas.drawCircle(center, width * 0.15, bgPaint);
 
     final ui.Picture picture = recorder.endRecording();
     final ui.Image image = await picture.toImage(width.toInt(), height.toInt());
