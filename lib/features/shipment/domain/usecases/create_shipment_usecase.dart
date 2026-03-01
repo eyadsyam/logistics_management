@@ -18,6 +18,10 @@ class CreateShipmentUseCase
       origin: params.origin,
       destination: params.destination,
       notes: params.notes,
+      price: params.price,
+      polyline: params.polyline,
+      distanceMeters: params.distanceMeters,
+      durationSeconds: params.durationSeconds,
     );
   }
 }
@@ -27,11 +31,19 @@ class CreateShipmentParams {
   final ShipmentLocation origin;
   final ShipmentLocation destination;
   final String? notes;
+  final double price;
+  final String? polyline;
+  final int distanceMeters;
+  final int durationSeconds;
 
   const CreateShipmentParams({
     required this.clientId,
     required this.origin,
     required this.destination,
     this.notes,
+    this.price = 0.0,
+    this.polyline,
+    this.distanceMeters = 0,
+    this.durationSeconds = 0,
   });
 }

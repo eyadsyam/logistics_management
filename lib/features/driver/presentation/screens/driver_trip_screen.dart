@@ -451,6 +451,8 @@ class _DriverTripScreenState extends ConsumerState<DriverTripScreen> {
                             false, // Turn off native dot so only Custom Car shows up
                       ),
                     );
+                    // Draw the initial route once the map is ready
+                    _drawShipmentRoute(shipment);
                   },
                   cameraOptions: CameraOptions(
                     center: Point(

@@ -28,6 +28,10 @@ class ShipmentRepositoryImpl implements ShipmentRepository {
     required ShipmentLocation origin,
     required ShipmentLocation destination,
     String? notes,
+    double price = 0.0,
+    String? polyline,
+    int distanceMeters = 0,
+    int durationSeconds = 0,
   }) async {
     try {
       final docRef = _shipmentsRef.doc();
@@ -41,6 +45,10 @@ class ShipmentRepositoryImpl implements ShipmentRepository {
         destination: destination,
         notes: notes,
         createdAt: now,
+        price: price,
+        polyline: polyline,
+        distanceMeters: distanceMeters,
+        durationSeconds: durationSeconds,
       );
 
       final shipmentJson = shipment.toJson();

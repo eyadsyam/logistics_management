@@ -74,46 +74,18 @@ service cloud.firestore {
       // Client can read their own shipments
       // Driver can read shipments assigned to them or pending ones
       // Admin can read all
-      allow read: if isAuthenticated() && (
-        resource.data.clientId == request.auth.uid ||
-        resource.data.driverId == request.auth.uid ||
-        resource.data.status == 'pending' ||
-        resource.data.status == 'accepted' ||
-        resource.data.status == 'in_progress' ||
-        isAdmin()
-      );
+      allow read: if isAuthenticated();
 
-      // Only authenticated clients can create shipments
       allow create: if isAuthenticated() &&
-        getUserRole() == 'client' &&
-        request.resource.data.clientId == request.auth.uid &&
-        request.resource.data.status == 'pending';
+        request.resource.data.clientId == request.auth.uid;
 
-      // Driver can update only their assigned shipment
-      // Client can only cancel their pending shipments
-      // Admin can update any shipment
-      allow update: if isAuthenticated() && (
-        // Driver updating their assigned shipment
-        (resource.data.driverId == request.auth.uid && getUserRole() == 'driver') ||
-        // Driver accepting a pending shipment
-        (resource.data.status == 'pending' && getUserRole() == 'driver' &&
-         request.resource.data.driverId == request.auth.uid) ||
-        // Client cancelling their pending shipment
-        (resource.data.clientId == request.auth.uid &&
-         resource.data.status == 'pending' &&
-         request.resource.data.status == 'cancelled') ||
-        // Admin can update anything
+      allow update: if isAuthenticated();
+
+      // Only client and admin can delete/cancel shipments
+      allow delete: if isAuthenticated() && (
+        resource.data.clientId == request.auth.uid ||
         isAdmin()
-      );
-
-      // Admins can delete shipments, Clients can delete their own completed shipments
-      allow delete: if isAdmin() || (
-        isAuthenticated() && 
-        resource.data.clientId == request.auth.uid && 
-        resource.data.status == 'completed'
-      );
-
-      // ── Location History Subcollection ──
+      );// ── Location History Subcollection ──
       match /location_history/{pointId} {
         // Driver can write to location history of their assigned shipment
         // Client and admin can read

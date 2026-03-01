@@ -580,26 +580,16 @@ class _CreateShipmentScreenState extends ConsumerState<CreateShipmentScreen>
             origin: _origin!,
             destination: _destination!,
             notes: _buildNotesString(),
+            price: _estimatedCost,
+            polyline: _routeInfo?.polyline,
+            distanceMeters: _routeInfo?.distanceMeters ?? 0,
+            durationSeconds: _routeInfo?.durationSeconds ?? 0,
           ),
         );
 
     setState(() => _isLoading = false);
 
     result.fold((failure) => _showError(failure.message), (shipment) {
-      if (_routeInfo != null) {
-        ref
-            .read(shipmentRepositoryProvider)
-            .updateShipmentRoute(
-              shipmentId: shipment.id,
-              polyline: _routeInfo!.polyline,
-              distanceMeters: _routeInfo!.distanceMeters,
-              durationSeconds: _routeInfo!.durationSeconds,
-              etaTimestamp: DateTime.now().add(
-                Duration(seconds: _routeInfo!.durationSeconds),
-              ),
-            );
-      }
-
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: const Row(

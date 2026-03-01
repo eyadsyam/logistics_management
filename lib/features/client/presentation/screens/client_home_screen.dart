@@ -10,6 +10,7 @@ import '../../../../core/utils/error_handler.dart';
 import '../../../auth/presentation/state/auth_state.dart';
 import '../../../shipment/domain/models/shipment_model.dart';
 import '../widgets/shipment_card.dart';
+import 'client_history_screen.dart';
 import 'create_shipment_screen.dart';
 
 enum ShipmentSortOption {
@@ -40,7 +41,6 @@ class ClientHomeScreen extends ConsumerStatefulWidget {
 class _ClientHomeScreenState extends ConsumerState<ClientHomeScreen> {
   String _searchQuery = '';
   final _searchController = TextEditingController();
-  bool _showHistory = false;
   ShipmentSortOption _sortOption = ShipmentSortOption.dateNewest;
 
   @override
@@ -167,15 +167,16 @@ class _ClientHomeScreenState extends ConsumerState<ClientHomeScreen> {
                                 if (hasClearedHistory)
                                   TextButton(
                                     onPressed: () {
-                                      setState(() {
-                                        _showHistory = !_showHistory;
-                                      });
+                                      Navigator.of(context).push(
+                                        MaterialPageRoute(
+                                          builder: (_) =>
+                                              const ClientHistoryScreen(),
+                                        ),
+                                      );
                                     },
-                                    child: Text(
-                                      _showHistory
-                                          ? 'Hide History'
-                                          : 'Show History',
-                                      style: const TextStyle(
+                                    child: const Text(
+                                      'View History',
+                                      style: TextStyle(
                                         color: AppColors.primary,
                                       ),
                                     ),
@@ -238,7 +239,7 @@ class _ClientHomeScreenState extends ConsumerState<ClientHomeScreen> {
                 child: shipmentsAsync.when(
                   data: (shipments) {
                     final filtered = shipments.where((s) {
-                      if (!_showHistory && s.isCleared) return false;
+                      if (s.isCleared) return false;
                       final query = _searchQuery.toLowerCase();
                       return s.origin.address.toLowerCase().contains(query) ||
                           s.destination.address.toLowerCase().contains(query) ||

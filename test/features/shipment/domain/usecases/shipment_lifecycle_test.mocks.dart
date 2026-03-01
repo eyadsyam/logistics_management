@@ -47,6 +47,10 @@ class MockShipmentRepository extends _i1.Mock
     required _i6.ShipmentLocation? origin,
     required _i6.ShipmentLocation? destination,
     String? notes,
+    double? price = 0.0,
+    String? polyline,
+    int? distanceMeters = 0,
+    int? durationSeconds = 0,
   }) =>
       (super.noSuchMethod(
             Invocation.method(#createShipment, [], {
@@ -54,6 +58,10 @@ class MockShipmentRepository extends _i1.Mock
               #origin: origin,
               #destination: destination,
               #notes: notes,
+              #price: price,
+              #polyline: polyline,
+              #distanceMeters: distanceMeters,
+              #durationSeconds: durationSeconds,
             }),
             returnValue:
                 _i4.Future<_i2.Either<_i5.Failure, _i6.ShipmentModel>>.value(
@@ -64,6 +72,10 @@ class MockShipmentRepository extends _i1.Mock
                       #origin: origin,
                       #destination: destination,
                       #notes: notes,
+                      #price: price,
+                      #polyline: polyline,
+                      #distanceMeters: distanceMeters,
+                      #durationSeconds: durationSeconds,
                     }),
                   ),
                 ),

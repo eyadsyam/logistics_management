@@ -10,6 +10,10 @@ abstract class ShipmentRepository {
     required ShipmentLocation origin,
     required ShipmentLocation destination,
     String? notes,
+    double price = 0.0,
+    String? polyline,
+    int distanceMeters = 0,
+    int durationSeconds = 0,
   });
 
   /// Get a single shipment by ID.
