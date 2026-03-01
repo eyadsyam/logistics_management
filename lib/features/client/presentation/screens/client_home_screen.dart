@@ -12,6 +12,15 @@ import '../../../shipment/domain/models/shipment_model.dart';
 import '../widgets/shipment_card.dart';
 import 'create_shipment_screen.dart';
 
+enum ShipmentSortOption {
+  dateNewest,
+  dateOldest,
+  distanceShortest,
+  distanceLongest,
+  priceHighest,
+  priceLowest,
+}
+
 /// Shipment list providers for the client dashboard.
 final clientShipmentsProvider =
     StreamProvider.family<List<ShipmentModel>, String>((ref, clientId) {
@@ -32,6 +41,7 @@ class _ClientHomeScreenState extends ConsumerState<ClientHomeScreen> {
   String _searchQuery = '';
   final _searchController = TextEditingController();
   bool _showHistory = false;
+  ShipmentSortOption _sortOption = ShipmentSortOption.dateNewest;
 
   @override
   void dispose() {
@@ -176,6 +186,45 @@ class _ClientHomeScreenState extends ConsumerState<ClientHomeScreen> {
                           loading: () => const SizedBox.shrink(),
                           error: (_, __) => const SizedBox.shrink(),
                         ),
+                        const SizedBox(width: 8),
+                        PopupMenuButton<ShipmentSortOption>(
+                          icon: const Icon(
+                            Icons.sort,
+                            color: AppColors.textSecondary,
+                          ),
+                          onSelected: (ShipmentSortOption result) {
+                            setState(() {
+                              _sortOption = result;
+                            });
+                          },
+                          itemBuilder: (BuildContext context) =>
+                              <PopupMenuEntry<ShipmentSortOption>>[
+                                const PopupMenuItem<ShipmentSortOption>(
+                                  value: ShipmentSortOption.dateNewest,
+                                  child: Text('Date: Newest to Oldest'),
+                                ),
+                                const PopupMenuItem<ShipmentSortOption>(
+                                  value: ShipmentSortOption.dateOldest,
+                                  child: Text('Date: Oldest to Newest'),
+                                ),
+                                const PopupMenuItem<ShipmentSortOption>(
+                                  value: ShipmentSortOption.distanceShortest,
+                                  child: Text('Distance: Shortest to Longest'),
+                                ),
+                                const PopupMenuItem<ShipmentSortOption>(
+                                  value: ShipmentSortOption.distanceLongest,
+                                  child: Text('Distance: Longest to Shortest'),
+                                ),
+                                const PopupMenuItem<ShipmentSortOption>(
+                                  value: ShipmentSortOption.priceHighest,
+                                  child: Text('Price: Highest to Lowest'),
+                                ),
+                                const PopupMenuItem<ShipmentSortOption>(
+                                  value: ShipmentSortOption.priceLowest,
+                                  child: Text('Price: Lowest to Highest'),
+                                ),
+                              ],
+                        ),
                       ],
                     ),
                   ],
@@ -195,6 +244,29 @@ class _ClientHomeScreenState extends ConsumerState<ClientHomeScreen> {
                           s.destination.address.toLowerCase().contains(query) ||
                           (s.notes?.toLowerCase() ?? '').contains(query);
                     }).toList();
+
+                    filtered.sort((a, b) {
+                      switch (_sortOption) {
+                        case ShipmentSortOption.dateNewest:
+                          return b.createdAt?.compareTo(
+                                a.createdAt ?? DateTime.now(),
+                              ) ??
+                              0;
+                        case ShipmentSortOption.dateOldest:
+                          return a.createdAt?.compareTo(
+                                b.createdAt ?? DateTime.now(),
+                              ) ??
+                              0;
+                        case ShipmentSortOption.distanceShortest:
+                          return a.distanceMeters.compareTo(b.distanceMeters);
+                        case ShipmentSortOption.distanceLongest:
+                          return b.distanceMeters.compareTo(a.distanceMeters);
+                        case ShipmentSortOption.priceHighest:
+                          return b.price.compareTo(a.price);
+                        case ShipmentSortOption.priceLowest:
+                          return a.price.compareTo(b.price);
+                      }
+                    });
 
                     if (filtered.isEmpty) {
                       return _buildEmptyState(

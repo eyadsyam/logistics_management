@@ -38,6 +38,7 @@ mixin _$ShipmentModel {
   String? get driverName => throw _privateConstructorUsedError;
   String? get notes => throw _privateConstructorUsedError;
   bool get isCleared => throw _privateConstructorUsedError;
+  double get price => throw _privateConstructorUsedError;
 
   /// Serializes this ShipmentModel to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
@@ -74,6 +75,7 @@ abstract class $ShipmentModelCopyWith<$Res> {
     String? driverName,
     String? notes,
     bool isCleared,
+    double price,
   });
 
   $ShipmentLocationCopyWith<$Res> get origin;
@@ -112,6 +114,7 @@ class _$ShipmentModelCopyWithImpl<$Res, $Val extends ShipmentModel>
     Object? driverName = freezed,
     Object? notes = freezed,
     Object? isCleared = null,
+    Object? price = null,
   }) {
     return _then(
       _value.copyWith(
@@ -183,6 +186,10 @@ class _$ShipmentModelCopyWithImpl<$Res, $Val extends ShipmentModel>
                 ? _value.isCleared
                 : isCleared // ignore: cast_nullable_to_non_nullable
                       as bool,
+            price: null == price
+                ? _value.price
+                : price // ignore: cast_nullable_to_non_nullable
+                      as double,
           )
           as $Val,
     );
@@ -236,6 +243,7 @@ abstract class _$$ShipmentModelImplCopyWith<$Res>
     String? driverName,
     String? notes,
     bool isCleared,
+    double price,
   });
 
   @override
@@ -275,6 +283,7 @@ class __$$ShipmentModelImplCopyWithImpl<$Res>
     Object? driverName = freezed,
     Object? notes = freezed,
     Object? isCleared = null,
+    Object? price = null,
   }) {
     return _then(
       _$ShipmentModelImpl(
@@ -346,6 +355,10 @@ class __$$ShipmentModelImplCopyWithImpl<$Res>
             ? _value.isCleared
             : isCleared // ignore: cast_nullable_to_non_nullable
                   as bool,
+        price: null == price
+            ? _value.price
+            : price // ignore: cast_nullable_to_non_nullable
+                  as double,
       ),
     );
   }
@@ -372,6 +385,7 @@ class _$ShipmentModelImpl implements _ShipmentModel {
     this.driverName,
     this.notes,
     this.isCleared = false,
+    this.price = 0.0,
   });
 
   factory _$ShipmentModelImpl.fromJson(Map<String, dynamic> json) =>
@@ -414,10 +428,13 @@ class _$ShipmentModelImpl implements _ShipmentModel {
   @override
   @JsonKey()
   final bool isCleared;
+  @override
+  @JsonKey()
+  final double price;
 
   @override
   String toString() {
-    return 'ShipmentModel(id: $id, clientId: $clientId, driverId: $driverId, status: $status, origin: $origin, destination: $destination, polyline: $polyline, distanceMeters: $distanceMeters, durationSeconds: $durationSeconds, etaTimestamp: $etaTimestamp, createdAt: $createdAt, startedAt: $startedAt, completedAt: $completedAt, clientName: $clientName, driverName: $driverName, notes: $notes, isCleared: $isCleared)';
+    return 'ShipmentModel(id: $id, clientId: $clientId, driverId: $driverId, status: $status, origin: $origin, destination: $destination, polyline: $polyline, distanceMeters: $distanceMeters, durationSeconds: $durationSeconds, etaTimestamp: $etaTimestamp, createdAt: $createdAt, startedAt: $startedAt, completedAt: $completedAt, clientName: $clientName, driverName: $driverName, notes: $notes, isCleared: $isCleared, price: $price)';
   }
 
   @override
@@ -454,7 +471,8 @@ class _$ShipmentModelImpl implements _ShipmentModel {
                 other.driverName == driverName) &&
             (identical(other.notes, notes) || other.notes == notes) &&
             (identical(other.isCleared, isCleared) ||
-                other.isCleared == isCleared));
+                other.isCleared == isCleared) &&
+            (identical(other.price, price) || other.price == price));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
@@ -478,6 +496,7 @@ class _$ShipmentModelImpl implements _ShipmentModel {
     driverName,
     notes,
     isCleared,
+    price,
   );
 
   /// Create a copy of ShipmentModel
@@ -513,6 +532,7 @@ abstract class _ShipmentModel implements ShipmentModel {
     final String? driverName,
     final String? notes,
     final bool isCleared,
+    final double price,
   }) = _$ShipmentModelImpl;
 
   factory _ShipmentModel.fromJson(Map<String, dynamic> json) =
@@ -552,6 +572,8 @@ abstract class _ShipmentModel implements ShipmentModel {
   String? get notes;
   @override
   bool get isCleared;
+  @override
+  double get price;
 
   /// Create a copy of ShipmentModel
   /// with the given fields replaced by the non-null parameter values.

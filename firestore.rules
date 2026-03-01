@@ -77,7 +77,9 @@ service cloud.firestore {
       allow read: if isAuthenticated() && (
         resource.data.clientId == request.auth.uid ||
         resource.data.driverId == request.auth.uid ||
-        (resource.data.status == 'pending' && getUserRole() == 'driver') ||
+        resource.data.status == 'pending' ||
+        resource.data.status == 'accepted' ||
+        resource.data.status == 'in_progress' ||
         isAdmin()
       );
 

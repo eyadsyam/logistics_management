@@ -11,6 +11,15 @@ import '../../../shipment/domain/usecases/accept_shipment_usecase.dart';
 import 'driver_trip_screen.dart';
 import '../../../auth/presentation/screens/driver_profile_screen.dart';
 
+enum ShipmentSortOption {
+  dateNewest,
+  dateOldest,
+  distanceShortest,
+  distanceLongest,
+  priceHighest,
+  priceLowest,
+}
+
 /// Driver stream provider
 final driverStreamProvider = StreamProvider.family<DriverModel, String>((
   ref,
@@ -40,11 +49,18 @@ final distanceFromDriverProvider =
     });
 
 /// Driver home screen with online/offline toggle and shipment requests.
-class DriverHomeScreen extends ConsumerWidget {
+class DriverHomeScreen extends ConsumerStatefulWidget {
   const DriverHomeScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<DriverHomeScreen> createState() => _DriverHomeScreenState();
+}
+
+class _DriverHomeScreenState extends ConsumerState<DriverHomeScreen> {
+  ShipmentSortOption _sortOption = ShipmentSortOption.dateNewest;
+
+  @override
+  Widget build(BuildContext context) {
     final currentUser = ref.watch(currentUserProvider);
 
     if (currentUser == null) {
@@ -70,7 +86,6 @@ class DriverHomeScreen extends ConsumerWidget {
               // ── Header ──
               _buildHeader(
                 context,
-                ref,
                 currentUser.name,
               ).animate().fadeIn(duration: 400.ms),
 
@@ -78,7 +93,7 @@ class DriverHomeScreen extends ConsumerWidget {
 
               // ── Online/Offline Toggle ──
               driverAsync.when(
-                data: (driver) => _buildStatusToggle(context, ref, driver)
+                data: (driver) => _buildStatusToggle(context, driver)
                     .animate()
                     .fadeIn(duration: 400.ms, delay: 100.ms)
                     .slideY(begin: 0.1, end: 0),
@@ -100,11 +115,51 @@ class DriverHomeScreen extends ConsumerWidget {
                       'Nearby Shipments',
                       style: Theme.of(context).textTheme.headlineSmall,
                     ),
+                    const Spacer(),
                     Text(
                       'Refreshes live',
                       style: Theme.of(
                         context,
                       ).textTheme.bodySmall?.copyWith(color: AppColors.primary),
+                    ),
+                    const SizedBox(width: 8),
+                    PopupMenuButton<ShipmentSortOption>(
+                      icon: const Icon(
+                        Icons.sort,
+                        color: AppColors.textSecondary,
+                      ),
+                      onSelected: (ShipmentSortOption result) {
+                        setState(() {
+                          _sortOption = result;
+                        });
+                      },
+                      itemBuilder: (BuildContext context) =>
+                          <PopupMenuEntry<ShipmentSortOption>>[
+                            const PopupMenuItem<ShipmentSortOption>(
+                              value: ShipmentSortOption.dateNewest,
+                              child: Text('Date: Newest to Oldest'),
+                            ),
+                            const PopupMenuItem<ShipmentSortOption>(
+                              value: ShipmentSortOption.dateOldest,
+                              child: Text('Date: Oldest to Newest'),
+                            ),
+                            const PopupMenuItem<ShipmentSortOption>(
+                              value: ShipmentSortOption.distanceShortest,
+                              child: Text('Distance: Shortest to Longest'),
+                            ),
+                            const PopupMenuItem<ShipmentSortOption>(
+                              value: ShipmentSortOption.distanceLongest,
+                              child: Text('Distance: Longest to Shortest'),
+                            ),
+                            const PopupMenuItem<ShipmentSortOption>(
+                              value: ShipmentSortOption.priceHighest,
+                              child: Text('Price: Highest to Lowest'),
+                            ),
+                            const PopupMenuItem<ShipmentSortOption>(
+                              value: ShipmentSortOption.priceLowest,
+                              child: Text('Price: Lowest to Highest'),
+                            ),
+                          ],
                     ),
                   ],
                 ),
@@ -119,12 +174,38 @@ class DriverHomeScreen extends ConsumerWidget {
                     if (shipments.isEmpty) {
                       return _buildEmptyState(context);
                     }
+
+                    // Apply sorting
+                    final sortedShipments = List<ShipmentModel>.from(shipments);
+                    sortedShipments.sort((a, b) {
+                      switch (_sortOption) {
+                        case ShipmentSortOption.dateNewest:
+                          return b.createdAt?.compareTo(
+                                a.createdAt ?? DateTime.now(),
+                              ) ??
+                              0;
+                        case ShipmentSortOption.dateOldest:
+                          return a.createdAt?.compareTo(
+                                b.createdAt ?? DateTime.now(),
+                              ) ??
+                              0;
+                        case ShipmentSortOption.distanceShortest:
+                          return a.distanceMeters.compareTo(b.distanceMeters);
+                        case ShipmentSortOption.distanceLongest:
+                          return b.distanceMeters.compareTo(a.distanceMeters);
+                        case ShipmentSortOption.priceHighest:
+                          return b.price.compareTo(a.price);
+                        case ShipmentSortOption.priceLowest:
+                          return a.price.compareTo(b.price);
+                      }
+                    });
+
                     return ListView.builder(
                       padding: const EdgeInsets.symmetric(horizontal: 20),
-                      itemCount: shipments.length,
+                      itemCount: sortedShipments.length,
                       itemBuilder: (context, index) {
                         return _ShipmentRequestCard(
-                              shipment: shipments[index],
+                              shipment: sortedShipments[index],
                               driverId: currentUser.id,
                               driverName: currentUser.name,
                             )
@@ -161,7 +242,7 @@ class DriverHomeScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildHeader(BuildContext context, WidgetRef ref, String name) {
+  Widget _buildHeader(BuildContext context, String name) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
       child: Row(
@@ -201,11 +282,7 @@ class DriverHomeScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildStatusToggle(
-    BuildContext context,
-    WidgetRef ref,
-    DriverModel driver,
-  ) {
+  Widget _buildStatusToggle(BuildContext context, DriverModel driver) {
     final isOnline = driver.isOnline;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
