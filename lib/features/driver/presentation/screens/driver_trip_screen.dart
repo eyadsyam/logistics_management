@@ -8,6 +8,7 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/utils/map_marker_util.dart';
 import '../../../shipment/domain/models/shipment_model.dart';
+import '../../../shipment/domain/usecases/accept_shipment_usecase.dart';
 import '../../domain/models/driver_model.dart';
 
 /// Driver active trip screen with GPS tracking and shipment status controls.
@@ -443,7 +444,7 @@ class _DriverTripScreenState extends ConsumerState<DriverTripScreen> {
                     pixelRatio: MediaQuery.of(context).devicePixelRatio,
                   ),
                   styleUri: AppConstants.mapboxStyleUrl,
-                  onMapCreated: (controller) {
+                  onMapCreated: (controller) async {
                     _mapController = controller;
                     _mapController!.location.updateSettings(
                       LocationComponentSettings(
@@ -453,6 +454,14 @@ class _DriverTripScreenState extends ConsumerState<DriverTripScreen> {
                     );
                     // Draw the initial route once the map is ready
                     _drawShipmentRoute(shipment);
+
+                    // Show current location for preview
+                    final pos = await ref
+                        .read(locationServiceProvider)
+                        .getCurrentPosition();
+                    if (pos != null) {
+                      _updateDriverMarker(pos.latitude, pos.longitude);
+                    }
                   },
                   cameraOptions: CameraOptions(
                     center: Point(
@@ -600,7 +609,7 @@ class _DriverTripScreenState extends ConsumerState<DriverTripScreen> {
                         fontWeight: FontWeight.w600,
                         fontSize: 16,
                       ),
-                      maxLines: 1,
+                      maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
                   ],
@@ -622,7 +631,7 @@ class _DriverTripScreenState extends ConsumerState<DriverTripScreen> {
                         fontWeight: FontWeight.w600,
                         fontSize: 16,
                       ),
-                      maxLines: 1,
+                      maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       textAlign: TextAlign.end,
                     ),
@@ -661,7 +670,11 @@ class _DriverTripScreenState extends ConsumerState<DriverTripScreen> {
             width: double.infinity,
             height: 54,
             child: ElevatedButton.icon(
-              onPressed: _isProcessing ? null : _startTrip,
+              onPressed: _isProcessing
+                  ? null
+                  : (shipment.status == AppConstants.statusPending
+                        ? _acceptShipment
+                        : _startTrip),
               icon: _isProcessing
                   ? const SizedBox(
                       height: 20,
@@ -671,14 +684,18 @@ class _DriverTripScreenState extends ConsumerState<DriverTripScreen> {
                         color: Colors.white,
                       ),
                     )
-                  : const Icon(
-                      Icons.play_arrow_rounded,
+                  : Icon(
+                      shipment.status == AppConstants.statusPending
+                          ? Icons.check_circle_rounded
+                          : Icons.play_arrow_rounded,
                       size: 24,
                       color: Colors.white,
                     ),
-              label: const Text(
-                'Start Trip',
-                style: TextStyle(
+              label: Text(
+                shipment.status == AppConstants.statusPending
+                    ? 'Accept Shipment'
+                    : 'Start Trip',
+                style: const TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
                   color: Colors.white,
@@ -695,6 +712,70 @@ class _DriverTripScreenState extends ConsumerState<DriverTripScreen> {
         ],
       ),
     );
+  }
+
+  Future<void> _acceptShipment() async {
+    setState(() => _isProcessing = true);
+
+    final currentUser = ref.read(currentUserProvider);
+    if (currentUser == null) {
+      setState(() => _isProcessing = false);
+      return;
+    }
+
+    final result = await ref
+        .read(acceptShipmentUseCaseProvider)
+        .call(
+          AcceptShipmentParams(
+            shipmentId: widget.shipmentId,
+            driverId: widget.driverId,
+            driverName: currentUser.name,
+          ),
+        );
+
+    result.fold(
+      (failure) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(failure.message),
+              backgroundColor: AppColors.error,
+            ),
+          );
+        }
+      },
+      (shipmentModel) {
+        ref
+            .read(driverRepositoryProvider)
+            .updateCurrentShipment(
+              driverId: widget.driverId,
+              shipmentId: widget.shipmentId,
+            );
+
+        // Setup initial ETA and Tracking
+        final locService = ref.read(locationServiceProvider);
+        locService.startTracking();
+
+        locService.getCurrentPosition().then((pos) {
+          if (pos != null) {
+            _updateETA(pos.latitude, pos.longitude);
+            if (locService.onLocationUpdate != null) {
+              locService.onLocationUpdate!(
+                LocationPoint(
+                  latitude: pos.latitude,
+                  longitude: pos.longitude,
+                  speed: pos.speed,
+                  accuracy: pos.accuracy,
+                  timestamp: pos.timestamp,
+                ),
+              );
+            }
+          }
+        });
+      },
+    );
+
+    setState(() => _isProcessing = false);
   }
 
   Widget _buildNavigationPanel(BuildContext context, ShipmentModel shipment) {

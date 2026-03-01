@@ -7,7 +7,6 @@ import '../../../../app/providers/app_providers.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../driver/domain/models/driver_model.dart';
 import '../../../shipment/domain/models/shipment_model.dart';
-import '../../../shipment/domain/usecases/accept_shipment_usecase.dart';
 import 'driver_trip_screen.dart';
 import '../../../auth/presentation/screens/driver_profile_screen.dart';
 
@@ -570,7 +569,16 @@ class _ShipmentRequestCard extends ConsumerWidget {
                 ),
               ),
               ElevatedButton(
-                onPressed: () => _acceptShipment(context, ref),
+                onPressed: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => DriverTripScreen(
+                        shipmentId: shipment.id,
+                        driverId: driverId,
+                      ),
+                    ),
+                  );
+                },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primary,
                   foregroundColor: Colors.white,
@@ -584,7 +592,7 @@ class _ShipmentRequestCard extends ConsumerWidget {
                   elevation: 0,
                 ),
                 child: const Text(
-                  'ACCEPT LOAD',
+                  'EXPLORE',
                   style: TextStyle(
                     fontWeight: FontWeight.w800,
                     letterSpacing: 1,
@@ -640,35 +648,6 @@ class _ShipmentRequestCard extends ConsumerWidget {
           letterSpacing: 1,
         ),
       ),
-    );
-  }
-
-  Future<void> _acceptShipment(BuildContext context, WidgetRef ref) async {
-    final result = await ref
-        .read(acceptShipmentUseCaseProvider)
-        .call(
-          AcceptShipmentParams(
-            shipmentId: shipment.id,
-            driverId: driverId,
-            driverName: driverName,
-          ),
-        );
-
-    result.fold(
-      (failure) => ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(failure.message))),
-      (shipment) {
-        ref
-            .read(driverRepositoryProvider)
-            .updateCurrentShipment(driverId: driverId, shipmentId: shipment.id);
-        Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (_) =>
-                DriverTripScreen(shipmentId: shipment.id, driverId: driverId),
-          ),
-        );
-      },
     );
   }
 }

@@ -106,9 +106,41 @@ class _ClientHomeScreenState extends ConsumerState<ClientHomeScreen> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
-                      'Your Shipments',
-                      style: Theme.of(context).textTheme.headlineSmall,
+                    InkWell(
+                      onTap: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => const ClientHistoryScreen(),
+                          ),
+                        );
+                      },
+                      borderRadius: BorderRadius.circular(8),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          vertical: 4,
+                          horizontal: 4,
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              'All Shipments',
+                              style: Theme.of(context).textTheme.headlineSmall
+                                  ?.copyWith(
+                                    color: AppColors.primary,
+                                    decoration: TextDecoration.underline,
+                                    decorationColor: AppColors.primary,
+                                  ),
+                            ),
+                            const SizedBox(width: 4),
+                            const Icon(
+                              Icons.arrow_forward_ios_rounded,
+                              color: AppColors.primary,
+                              size: 16,
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
                     Row(
                       children: [
@@ -133,10 +165,6 @@ class _ClientHomeScreenState extends ConsumerState<ClientHomeScreen> {
                                           AppConstants.statusCancelled) &&
                                   !s.isCleared,
                             );
-                            final hasClearedHistory = shipments.any(
-                              (s) => s.isCleared,
-                            );
-
                             return Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
@@ -162,23 +190,6 @@ class _ClientHomeScreenState extends ConsumerState<ClientHomeScreen> {
                                     child: const Text(
                                       'Clear',
                                       style: TextStyle(color: AppColors.error),
-                                    ),
-                                  ),
-                                if (hasClearedHistory)
-                                  TextButton(
-                                    onPressed: () {
-                                      Navigator.of(context).push(
-                                        MaterialPageRoute(
-                                          builder: (_) =>
-                                              const ClientHistoryScreen(),
-                                        ),
-                                      );
-                                    },
-                                    child: const Text(
-                                      'View History',
-                                      style: TextStyle(
-                                        color: AppColors.primary,
-                                      ),
                                     ),
                                   ),
                               ],
