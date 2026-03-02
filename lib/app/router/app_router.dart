@@ -15,19 +15,34 @@ import '../../features/driver/presentation/screens/driver_trip_screen.dart';
 import '../../features/splash/presentation/screens/splash_screen.dart';
 import '../providers/app_providers.dart';
 
+/// Notifier that triggers a GoRouter redirect when authentication or splash state changes.
+class RouterNotifier extends ChangeNotifier {
+  final Ref _ref;
+
+  RouterNotifier(this._ref) {
+    // Listen to dependencies and trigger GoRouter when they change
+    _ref.listen(authNotifierProvider, (_, __) => notifyListeners());
+    _ref.listen(currentUserProvider, (_, __) => notifyListeners());
+    _ref.listen(splashCompleteProvider, (_, __) => notifyListeners());
+  }
+}
+
 /// GoRouter configuration with role-based routing and auth guards.
 final routerProvider = Provider<GoRouter>((ref) {
-  ref.watch(authNotifierProvider);
-  final currentUser = ref.watch(currentUserProvider);
-  final splashDone = ref.watch(splashCompleteProvider);
+  final notifier = RouterNotifier(ref);
 
   return GoRouter(
+    refreshListenable: notifier, // Automatically triggers the redirect
     initialLocation: '/splash',
     debugLogDiagnostics: true,
     redirect: (context, state) {
       final isSplash = state.uri.path == '/splash';
       final isAuthRoute =
           state.uri.path == '/login' || state.uri.path == '/register';
+
+      // Read current state correctly
+      final currentUser = ref.read(currentUserProvider);
+      final splashDone = ref.read(splashCompleteProvider);
 
       // ── Stay on splash until initialization completes ──
       if (isSplash) {

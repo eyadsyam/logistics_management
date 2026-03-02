@@ -44,14 +44,19 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
   }
 
   Future<void> _initializeApp() async {
+    // ── Cache ref properties BEFORE any async gap! ──
+    // This is the absolute root cause of FlutterError (Widget unmounted).
+    final locService = ref.read(locationServiceProvider);
+
     // ── 1. Branding time ──
     await Future.delayed(const Duration(seconds: 2));
+    if (!mounted) return;
 
     // ── 2. Location permissions (best-effort, don't crash) ──
     try {
-      final locService = ref.read(locationServiceProvider);
       await locService.checkPermissions();
     } catch (_) {}
+    if (!mounted) return;
 
     // ── 3. Warm up GPS (best-effort) ──
     try {
@@ -61,11 +66,10 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
         ),
       );
     } catch (_) {}
+    if (!mounted) return;
 
     // ── 4. Signal completion — GoRouter redirect will navigate ──
-    if (mounted) {
-      ref.read(splashCompleteProvider.notifier).state = true;
-    }
+    ref.read(splashCompleteProvider.notifier).state = true;
   }
 
   @override
