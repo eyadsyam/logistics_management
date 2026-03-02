@@ -34,6 +34,8 @@ class _DriverTripScreenState extends ConsumerState<DriverTripScreen> {
   PointAnnotation? _driverAnnotation;
   String? _drawnShipmentId;
   String? _drawnPolyline;
+  String? _drawnDeliveryPolyline;
+  String? _drawnTripPhase;
 
   bool _isTripStarted = false;
   bool _isProcessing = false;
@@ -113,21 +115,31 @@ class _DriverTripScreenState extends ConsumerState<DriverTripScreen> {
     }
   }
 
-  /// Update ETA based on current position.
+  /// Update ETA based on current position — **phase-aware**.
+  /// During pickup: routes driver → factory.
+  /// During delivery: routes driver → destination.
   Future<void> _updateETA(double lat, double lng) async {
-    // Get shipment destination
     final shipmentResult = await ref
         .read(shipmentRepositoryProvider)
         .getShipment(widget.shipmentId);
 
     shipmentResult.fold((_) => null, (shipment) async {
+      final isPickup = shipment.tripPhase == 'pickup';
+      final factoryLoc = shipment.factoryLocation ?? shipment.origin;
+      final targetLat = isPickup
+          ? factoryLoc.latitude
+          : shipment.destination.latitude;
+      final targetLng = isPickup
+          ? factoryLoc.longitude
+          : shipment.destination.longitude;
+
       final eta = await ref
           .read(mapboxServiceProvider)
           .calculateETA(
             currentLat: lat,
             currentLng: lng,
-            destLat: shipment.destination.latitude,
-            destLng: shipment.destination.longitude,
+            destLat: targetLat,
+            destLng: targetLng,
           );
 
       if (eta != null) {
@@ -136,8 +148,8 @@ class _DriverTripScreenState extends ConsumerState<DriverTripScreen> {
             .getDirections(
               originLat: lat,
               originLng: lng,
-              destLat: shipment.destination.latitude,
-              destLng: shipment.destination.longitude,
+              destLat: targetLat,
+              destLng: targetLng,
             );
 
         if (directions != null) {
@@ -292,25 +304,31 @@ class _DriverTripScreenState extends ConsumerState<DriverTripScreen> {
       await _poiPointManager!.deleteAll();
       await _polylineManager!.deleteAll();
 
-      final originIconBytes = await MapMarkerUtil.getOriginMarkerBytes(
-        size: 80,
-      );
-      final destIconBytes = await MapMarkerUtil.getDestinationMarkerBytes(
-        size: 80,
-      );
-
       final factoryLoc = shipment.factoryLocation ?? shipment.origin;
       final isPickupPhase = shipment.tripPhase == 'pickup';
 
-      // Factory marker (origin / pickup point)
+      // ── Generate labeled marker images ──
+      final factoryIconBytes = await MapMarkerUtil.getLabeledMarkerBytes(
+        label: 'Factory ${shipment.factoryId ?? 'Edita'}',
+        color: Colors.deepOrange,
+        size: 180,
+      );
+      final destIconBytes = await MapMarkerUtil.getLabeledMarkerBytes(
+        label: 'Delivery',
+        color: AppColors.primary,
+        size: 180,
+      );
+
+      // Factory marker
       final factoryMarker = PointAnnotationOptions(
         geometry: Point(
           coordinates: Position(factoryLoc.longitude, factoryLoc.latitude),
         ),
-        image: originIconBytes,
+        image: factoryIconBytes,
+        iconAnchor: IconAnchor.BOTTOM,
       );
 
-      // Destination marker (client drop-off)
+      // Destination marker
       final destMarker = PointAnnotationOptions(
         geometry: Point(
           coordinates: Position(
@@ -319,49 +337,72 @@ class _DriverTripScreenState extends ConsumerState<DriverTripScreen> {
           ),
         ),
         image: destIconBytes,
+        iconAnchor: IconAnchor.BOTTOM,
       );
 
       await _poiPointManager!.createMulti([factoryMarker, destMarker]);
 
-      // ── Draw pickup leg (driver → factory) ──
+      // ── Draw pickup leg (driver → factory) — ORANGE ──
       if (isPickupPhase &&
           shipment.polyline != null &&
           shipment.polyline!.isNotEmpty) {
         final pickupPoints = _decodePolyline(shipment.polyline!, precision: 6);
-        if (pickupPoints.isNotEmpty) {
+        if (pickupPoints.length >= 2) {
           await _polylineManager!.create(
             PolylineAnnotationOptions(
               geometry: LineString(coordinates: pickupPoints),
               lineColor: Colors.deepOrange.toARGB32(),
-              lineWidth: 5.0,
+              lineWidth: 6.0,
               lineJoin: LineJoin.ROUND,
             ),
           );
         }
       }
 
-      // ── Draw delivery leg (factory → destination) ──
-      final deliveryPoly = shipment.deliveryPolyline ?? shipment.polyline;
-      if (deliveryPoly != null && deliveryPoly.isNotEmpty) {
-        final deliveryPoints = _decodePolyline(deliveryPoly, precision: 6);
-        if (deliveryPoints.isNotEmpty) {
+      // ── Draw delivery leg (factory → destination) — BLUE/PRIMARY ──
+      if (shipment.deliveryPolyline != null &&
+          shipment.deliveryPolyline!.isNotEmpty) {
+        final deliveryPoints = _decodePolyline(
+          shipment.deliveryPolyline!,
+          precision: 6,
+        );
+        if (deliveryPoints.length >= 2) {
           await _polylineManager!.create(
             PolylineAnnotationOptions(
               geometry: LineString(coordinates: deliveryPoints),
               lineColor: AppColors.primary.toARGB32(),
-              lineWidth: isPickupPhase
-                  ? 3.0
-                  : 5.0, // thinner when viewing both legs
+              lineWidth: isPickupPhase ? 4.0 : 6.0,
               lineJoin: LineJoin.ROUND,
             ),
           );
         }
       }
 
-      // ── Fallback straight line ──
-      if ((shipment.polyline == null || shipment.polyline!.isEmpty) &&
+      // ── During delivery phase, polyline = driver→destination ──
+      if (!isPickupPhase &&
           (shipment.deliveryPolyline == null ||
-              shipment.deliveryPolyline!.isEmpty)) {
+              shipment.deliveryPolyline!.isEmpty) &&
+          shipment.polyline != null &&
+          shipment.polyline!.isNotEmpty) {
+        final pts = _decodePolyline(shipment.polyline!, precision: 6);
+        if (pts.length >= 2) {
+          await _polylineManager!.create(
+            PolylineAnnotationOptions(
+              geometry: LineString(coordinates: pts),
+              lineColor: AppColors.primary.toARGB32(),
+              lineWidth: 6.0,
+              lineJoin: LineJoin.ROUND,
+            ),
+          );
+        }
+      }
+
+      // ── Fallback: straight line if no polylines at all ──
+      final hasAnyPolyline =
+          (shipment.polyline != null && shipment.polyline!.isNotEmpty) ||
+          (shipment.deliveryPolyline != null &&
+              shipment.deliveryPolyline!.isNotEmpty);
+      if (!hasAnyPolyline) {
         await _polylineManager!.create(
           PolylineAnnotationOptions(
             geometry: LineString(
@@ -374,7 +415,7 @@ class _DriverTripScreenState extends ConsumerState<DriverTripScreen> {
               ],
             ),
             lineColor: AppColors.primary.toARGB32(),
-            lineWidth: 5.0,
+            lineWidth: 4.0,
             lineJoin: LineJoin.ROUND,
           ),
         );
@@ -444,6 +485,65 @@ class _DriverTripScreenState extends ConsumerState<DriverTripScreen> {
     return coordinates;
   }
 
+  /// Compute initial routes when the driver first opens the screen.
+  Future<void> _computeInitialRoutes(ShipmentModel shipment) async {
+    final pos = await ref.read(locationServiceProvider).getCurrentPosition();
+    if (pos == null) return;
+
+    final mapboxService = ref.read(mapboxServiceProvider);
+    final factoryLoc = shipment.factoryLocation ?? shipment.origin;
+
+    // Leg 1: Driver → Factory
+    final pickupDirections = await mapboxService.getDirections(
+      originLat: pos.latitude,
+      originLng: pos.longitude,
+      destLat: factoryLoc.latitude,
+      destLng: factoryLoc.longitude,
+    );
+
+    if (pickupDirections != null) {
+      final eta = DateTime.now().add(
+        Duration(seconds: pickupDirections.durationSeconds),
+      );
+      await ref
+          .read(shipmentRepositoryProvider)
+          .updateShipmentRoute(
+            shipmentId: widget.shipmentId,
+            polyline: pickupDirections.polyline,
+            distanceMeters: pickupDirections.distanceMeters,
+            durationSeconds: pickupDirections.durationSeconds,
+            etaTimestamp: eta,
+          );
+    }
+
+    // Leg 2: Factory → Destination (only if missing)
+    if (shipment.deliveryPolyline == null ||
+        shipment.deliveryPolyline!.isEmpty) {
+      final deliveryDirections = await mapboxService.getDirections(
+        originLat: factoryLoc.latitude,
+        originLng: factoryLoc.longitude,
+        destLat: shipment.destination.latitude,
+        destLng: shipment.destination.longitude,
+      );
+
+      if (deliveryDirections != null) {
+        try {
+          await ref
+              .read(firestoreProvider)
+              .collection('shipments')
+              .doc(widget.shipmentId)
+              .update({
+                'deliveryPolyline': deliveryDirections.polyline,
+                'deliveryDistanceMeters': deliveryDirections.distanceMeters,
+                'deliveryDurationSeconds': deliveryDirections.durationSeconds,
+              });
+        } catch (e) {
+          debugPrint('Error saving delivery leg: $e');
+        }
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final shipmentStream = ref
@@ -465,9 +565,13 @@ class _DriverTripScreenState extends ConsumerState<DriverTripScreen> {
 
           if (_drawnShipmentId != shipment.id ||
               _drawnPolyline != shipment.polyline ||
+              _drawnDeliveryPolyline != shipment.deliveryPolyline ||
+              _drawnTripPhase != shipment.tripPhase ||
               (_drawnShipmentId == shipment.id && _polylineManager == null)) {
             _drawnShipmentId = shipment.id;
             _drawnPolyline = shipment.polyline;
+            _drawnDeliveryPolyline = shipment.deliveryPolyline;
+            _drawnTripPhase = shipment.tripPhase;
             _drawShipmentRoute(shipment);
           }
 
@@ -484,10 +588,7 @@ class _DriverTripScreenState extends ConsumerState<DriverTripScreen> {
                   onMapCreated: (controller) async {
                     _mapController = controller;
                     _mapController!.location.updateSettings(
-                      LocationComponentSettings(
-                        enabled:
-                            false, // Turn off native dot so only Custom Car shows up
-                      ),
+                      LocationComponentSettings(enabled: false),
                     );
                     // Draw the initial route once the map is ready
                     _drawShipmentRoute(shipment);
@@ -499,6 +600,9 @@ class _DriverTripScreenState extends ConsumerState<DriverTripScreen> {
                     if (pos != null) {
                       _updateDriverMarker(pos.latitude, pos.longitude);
                     }
+
+                    // Compute routes from driver→factory & factory→destination
+                    _computeInitialRoutes(shipment);
                   },
                   cameraOptions: CameraOptions(
                     center: Point(
@@ -810,6 +914,29 @@ class _DriverTripScreenState extends ConsumerState<DriverTripScreen> {
                 fontWeight: FontWeight.w800,
                 color: AppColors.primary,
               ),
+            ),
+          ],
+
+          // ── Total Trip ETA ──
+          if (shipment.durationSeconds > 0 ||
+              shipment.deliveryDurationSeconds > 0) ...[
+            const SizedBox(height: 6),
+            Builder(
+              builder: (context) {
+                final totalSeconds =
+                    shipment.durationSeconds + shipment.deliveryDurationSeconds;
+                final eta = DateTime.now().add(Duration(seconds: totalSeconds));
+                final etaStr =
+                    '${eta.hour > 12 ? eta.hour - 12 : (eta.hour == 0 ? 12 : eta.hour)}:${eta.minute.toString().padLeft(2, '0')} ${eta.hour >= 12 ? 'PM' : 'AM'}';
+                return Text(
+                  'Full trip completes ~$etaStr',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey.shade600,
+                    fontWeight: FontWeight.w500,
+                  ),
+                );
+              },
             ),
           ],
 

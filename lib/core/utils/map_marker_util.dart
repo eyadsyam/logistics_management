@@ -157,4 +157,96 @@ class MapMarkerUtil {
 
     return bytes!.buffer.asUint8List();
   }
+
+  /// Draws a labeled map marker — colored pin with text label above.
+  /// The label text appears above the pin when anchored at BOTTOM.
+  static Future<Uint8List> getLabeledMarkerBytes({
+    required String label,
+    required Color color,
+    int size = 200,
+  }) async {
+    final ui.PictureRecorder recorder = ui.PictureRecorder();
+    final Canvas canvas = Canvas(recorder);
+
+    final double width = size.toDouble();
+    final double height = size * 1.2; // taller to fit label + pin
+
+    // ── Draw text label at top ──
+    final textPainter = TextPainter(
+      text: TextSpan(
+        text: label,
+        style: TextStyle(
+          color: Colors.white,
+          fontSize: size * 0.12,
+          fontWeight: FontWeight.w800,
+          letterSpacing: 0.5,
+        ),
+      ),
+      textDirection: TextDirection.ltr,
+      maxLines: 1,
+    );
+    textPainter.layout(maxWidth: width - 8);
+
+    // Label background pill
+    final labelWidth = textPainter.width + 16;
+    final labelHeight = textPainter.height + 8;
+    final labelRect = RRect.fromRectAndRadius(
+      Rect.fromCenter(
+        center: Offset(width / 2, labelHeight / 2 + 4),
+        width: labelWidth,
+        height: labelHeight,
+      ),
+      const Radius.circular(8),
+    );
+
+    // Shadow behind label
+    canvas.drawRRect(
+      labelRect.shift(const Offset(0, 2)),
+      Paint()
+        ..color = Colors.black.withValues(alpha: 0.3)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4),
+    );
+    // Label background
+    canvas.drawRRect(labelRect, Paint()..color = color);
+    // Label text
+    textPainter.paint(
+      canvas,
+      Offset(
+        (width - textPainter.width) / 2,
+        (labelHeight - textPainter.height) / 2 + 4,
+      ),
+    );
+
+    // ── Draw pin below label ──
+    final pinCenterY = labelHeight + 20 + size * 0.2;
+    final pinRadius = size * 0.16;
+
+    // Pin triangle (pointing down)
+    final trianglePath = Path()
+      ..moveTo(width / 2 - pinRadius * 0.6, pinCenterY)
+      ..lineTo(width / 2, pinCenterY + pinRadius * 1.2)
+      ..lineTo(width / 2 + pinRadius * 0.6, pinCenterY)
+      ..close();
+    canvas.drawPath(trianglePath, Paint()..color = color);
+
+    // Pin circle
+    canvas.drawCircle(
+      Offset(width / 2, pinCenterY - pinRadius * 0.3),
+      pinRadius,
+      Paint()..color = color,
+    );
+    canvas.drawCircle(
+      Offset(width / 2, pinCenterY - pinRadius * 0.3),
+      pinRadius * 0.55,
+      Paint()..color = Colors.white,
+    );
+
+    final ui.Picture picture = recorder.endRecording();
+    final ui.Image image = await picture.toImage(width.toInt(), height.toInt());
+    final ByteData? bytes = await image.toByteData(
+      format: ui.ImageByteFormat.png,
+    );
+
+    return bytes!.buffer.asUint8List();
+  }
 }
