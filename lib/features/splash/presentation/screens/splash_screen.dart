@@ -44,48 +44,44 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
   }
 
   Future<void> _initializeApp() async {
+    // ── Cache everything from ref/context BEFORE any async gap ──
+    // The widget is guaranteed to be mounted at this point because
+    // this is called from addPostFrameCallback (sync, first frame).
+    final locService = ref.read(locationServiceProvider);
+    final currentUser = ref.read(currentUserProvider);
+    final router = GoRouter.of(context);
+
+    // 1. Minimum splash time for branding
+    await Future.delayed(const Duration(seconds: 2));
+    if (!mounted) return;
+
+    // 2. Request core permissions (Location)
     try {
-      // 1. Minimum splash time for branding
-      await Future.delayed(const Duration(seconds: 2));
-      if (!mounted) return;
+      await locService.checkPermissions();
+    } catch (_) {}
+    if (!mounted) return;
 
-      // 2. Request core permissions (Location)
-      try {
-        final locService = ref.read(locationServiceProvider);
-        await locService.checkPermissions();
-      } catch (_) {}
-      if (!mounted) return;
+    // 3. Trigger a first location fetch to warm up GPS
+    try {
+      await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.high,
+        ),
+      );
+    } catch (_) {}
+    if (!mounted) return;
 
-      // Optionally trigger a first location fetch to jump-start GPS
-      try {
-        await Geolocator.getCurrentPosition(
-          locationSettings: const LocationSettings(
-            accuracy: LocationAccuracy.high,
-          ),
-        );
-      } catch (_) {}
-      if (!mounted) return;
-
-      // 3. Process Authentication State and Redirect
-      final currentUser = ref.read(currentUserProvider);
-      final router = GoRouter.of(context);
-
-      if (currentUser != null) {
-        if (currentUser.role == AppConstants.roleClient) {
-          router.go('/client');
-        } else if (currentUser.role == AppConstants.roleDriver) {
-          router.go('/driver');
-        } else {
-          router.go('/admin');
-        }
+    // 4. Navigate based on cached auth state
+    if (currentUser != null) {
+      if (currentUser.role == AppConstants.roleClient) {
+        router.go('/client');
+      } else if (currentUser.role == AppConstants.roleDriver) {
+        router.go('/driver');
       } else {
-        router.go('/login');
+        router.go('/admin');
       }
-    } catch (e) {
-      debugPrint('SplashScreen initialization error: $e');
-      if (mounted) {
-        GoRouter.of(context).go('/login');
-      }
+    } else {
+      router.go('/login');
     }
   }
 
