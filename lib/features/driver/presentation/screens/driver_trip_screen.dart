@@ -137,11 +137,16 @@ class _DriverTripScreenState extends ConsumerState<DriverTripScreen> {
   /// During pickup: routes driver → factory.
   /// During delivery: routes driver → destination.
   Future<void> _updateETA(double lat, double lng) async {
-    final shipmentResult = await ref
-        .read(shipmentRepositoryProvider)
-        .getShipment(widget.shipmentId);
+    // ── CACHE PROVIDERS SYNCHRONOUSLY BEFORE ANY AWAIT ──
+    // This strictly prevents "Cannot use ref after dispose" exceptions.
+    final shipmentRepo = ref.read(shipmentRepositoryProvider);
+    final mapboxService = ref.read(mapboxServiceProvider);
+
+    final shipmentResult = await shipmentRepo.getShipment(widget.shipmentId);
 
     shipmentResult.fold((_) => null, (shipment) async {
+      if (!mounted) return; // Guard against unmounted state
+
       final isPickup = shipment.tripPhase == 'pickup';
       final factoryLoc = shipment.factoryLocation ?? shipment.origin;
       final targetLat = isPickup
@@ -151,35 +156,29 @@ class _DriverTripScreenState extends ConsumerState<DriverTripScreen> {
           ? factoryLoc.longitude
           : shipment.destination.longitude;
 
-      final eta = await ref
-          .read(mapboxServiceProvider)
-          .calculateETA(
-            currentLat: lat,
-            currentLng: lng,
-            destLat: targetLat,
-            destLng: targetLng,
+      final eta = await mapboxService.calculateETA(
+        currentLat: lat,
+        currentLng: lng,
+        destLat: targetLat,
+        destLng: targetLng,
+      );
+
+      if (eta != null && mounted) {
+        final directions = await mapboxService.getDirections(
+          originLat: lat,
+          originLng: lng,
+          destLat: targetLat,
+          destLng: targetLng,
+        );
+
+        if (directions != null && mounted) {
+          await shipmentRepo.updateShipmentRoute(
+            shipmentId: widget.shipmentId,
+            polyline: directions.polyline,
+            distanceMeters: directions.distanceMeters,
+            durationSeconds: directions.durationSeconds,
+            etaTimestamp: eta,
           );
-
-      if (eta != null) {
-        final directions = await ref
-            .read(mapboxServiceProvider)
-            .getDirections(
-              originLat: lat,
-              originLng: lng,
-              destLat: targetLat,
-              destLng: targetLng,
-            );
-
-        if (directions != null) {
-          await ref
-              .read(shipmentRepositoryProvider)
-              .updateShipmentRoute(
-                shipmentId: widget.shipmentId,
-                polyline: directions.polyline,
-                distanceMeters: directions.distanceMeters,
-                durationSeconds: directions.durationSeconds,
-                etaTimestamp: eta,
-              );
         }
       }
     });
@@ -518,6 +517,11 @@ class _DriverTripScreenState extends ConsumerState<DriverTripScreen> {
 
   /// Compute initial routes when the driver first opens the screen.
   Future<void> _computeInitialRoutes(ShipmentModel shipment) async {
+    // ── CACHE PROVIDERS SYNCHRONOUSLY BEFORE ANY AWAIT ──
+    final locService = ref.read(locationServiceProvider);
+    final mapboxService = ref.read(mapboxServiceProvider);
+    final firestore = ref.read(firestoreProvider);
+
     debugPrint('=== _computeInitialRoutes START ===');
     debugPrint(
       'factoryLocation: ${shipment.factoryLocation?.latitude}, ${shipment.factoryLocation?.longitude}',
@@ -534,14 +538,13 @@ class _DriverTripScreenState extends ConsumerState<DriverTripScreen> {
       'existing deliveryPolyline length: ${shipment.deliveryPolyline?.length ?? 0}',
     );
 
-    final pos = await ref.read(locationServiceProvider).getCurrentPosition();
+    final pos = await locService.getCurrentPosition();
     if (pos == null) {
       debugPrint('ERROR: Could not get driver position');
       return;
     }
     debugPrint('Driver position: ${pos.latitude}, ${pos.longitude}');
 
-    final mapboxService = ref.read(mapboxServiceProvider);
     final factoryLoc = shipment.factoryLocation ?? shipment.origin;
     debugPrint(
       'Using factory coords: ${factoryLoc.latitude}, ${factoryLoc.longitude}',
@@ -608,8 +611,7 @@ class _DriverTripScreenState extends ConsumerState<DriverTripScreen> {
     if (updateData.isNotEmpty) {
       try {
         debugPrint('Saving to Firestore: ${updateData.keys.join(', ')}');
-        await ref
-            .read(firestoreProvider)
+        await firestore
             .collection('shipments')
             .doc(widget.shipmentId)
             .update(updateData);
