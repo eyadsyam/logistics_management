@@ -38,7 +38,25 @@ mixin _$ShipmentModel {
   String? get driverName => throw _privateConstructorUsedError;
   String? get notes => throw _privateConstructorUsedError;
   bool get isCleared => throw _privateConstructorUsedError;
-  double get price => throw _privateConstructorUsedError;
+  double get price =>
+      throw _privateConstructorUsedError; // ── Factory-first routing fields ──
+  /// The Edita factory code (e.g. "E06", "E10")
+  String? get factoryId => throw _privateConstructorUsedError;
+
+  /// The factory pickup location (driver goes here first)
+  ShipmentLocation? get factoryLocation => throw _privateConstructorUsedError;
+
+  /// Current trip phase: "pickup" (driver → factory) or "delivery" (factory → destination)
+  String get tripPhase => throw _privateConstructorUsedError;
+
+  /// Polyline from factory to destination (2nd leg)
+  String? get deliveryPolyline => throw _privateConstructorUsedError;
+
+  /// Distance from factory to destination
+  int get deliveryDistanceMeters => throw _privateConstructorUsedError;
+
+  /// Duration from factory to destination
+  int get deliveryDurationSeconds => throw _privateConstructorUsedError;
 
   /// Serializes this ShipmentModel to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
@@ -76,10 +94,17 @@ abstract class $ShipmentModelCopyWith<$Res> {
     String? notes,
     bool isCleared,
     double price,
+    String? factoryId,
+    ShipmentLocation? factoryLocation,
+    String tripPhase,
+    String? deliveryPolyline,
+    int deliveryDistanceMeters,
+    int deliveryDurationSeconds,
   });
 
   $ShipmentLocationCopyWith<$Res> get origin;
   $ShipmentLocationCopyWith<$Res> get destination;
+  $ShipmentLocationCopyWith<$Res>? get factoryLocation;
 }
 
 /// @nodoc
@@ -115,6 +140,12 @@ class _$ShipmentModelCopyWithImpl<$Res, $Val extends ShipmentModel>
     Object? notes = freezed,
     Object? isCleared = null,
     Object? price = null,
+    Object? factoryId = freezed,
+    Object? factoryLocation = freezed,
+    Object? tripPhase = null,
+    Object? deliveryPolyline = freezed,
+    Object? deliveryDistanceMeters = null,
+    Object? deliveryDurationSeconds = null,
   }) {
     return _then(
       _value.copyWith(
@@ -190,6 +221,30 @@ class _$ShipmentModelCopyWithImpl<$Res, $Val extends ShipmentModel>
                 ? _value.price
                 : price // ignore: cast_nullable_to_non_nullable
                       as double,
+            factoryId: freezed == factoryId
+                ? _value.factoryId
+                : factoryId // ignore: cast_nullable_to_non_nullable
+                      as String?,
+            factoryLocation: freezed == factoryLocation
+                ? _value.factoryLocation
+                : factoryLocation // ignore: cast_nullable_to_non_nullable
+                      as ShipmentLocation?,
+            tripPhase: null == tripPhase
+                ? _value.tripPhase
+                : tripPhase // ignore: cast_nullable_to_non_nullable
+                      as String,
+            deliveryPolyline: freezed == deliveryPolyline
+                ? _value.deliveryPolyline
+                : deliveryPolyline // ignore: cast_nullable_to_non_nullable
+                      as String?,
+            deliveryDistanceMeters: null == deliveryDistanceMeters
+                ? _value.deliveryDistanceMeters
+                : deliveryDistanceMeters // ignore: cast_nullable_to_non_nullable
+                      as int,
+            deliveryDurationSeconds: null == deliveryDurationSeconds
+                ? _value.deliveryDurationSeconds
+                : deliveryDurationSeconds // ignore: cast_nullable_to_non_nullable
+                      as int,
           )
           as $Val,
     );
@@ -212,6 +267,20 @@ class _$ShipmentModelCopyWithImpl<$Res, $Val extends ShipmentModel>
   $ShipmentLocationCopyWith<$Res> get destination {
     return $ShipmentLocationCopyWith<$Res>(_value.destination, (value) {
       return _then(_value.copyWith(destination: value) as $Val);
+    });
+  }
+
+  /// Create a copy of ShipmentModel
+  /// with the given fields replaced by the non-null parameter values.
+  @override
+  @pragma('vm:prefer-inline')
+  $ShipmentLocationCopyWith<$Res>? get factoryLocation {
+    if (_value.factoryLocation == null) {
+      return null;
+    }
+
+    return $ShipmentLocationCopyWith<$Res>(_value.factoryLocation!, (value) {
+      return _then(_value.copyWith(factoryLocation: value) as $Val);
     });
   }
 }
@@ -244,12 +313,20 @@ abstract class _$$ShipmentModelImplCopyWith<$Res>
     String? notes,
     bool isCleared,
     double price,
+    String? factoryId,
+    ShipmentLocation? factoryLocation,
+    String tripPhase,
+    String? deliveryPolyline,
+    int deliveryDistanceMeters,
+    int deliveryDurationSeconds,
   });
 
   @override
   $ShipmentLocationCopyWith<$Res> get origin;
   @override
   $ShipmentLocationCopyWith<$Res> get destination;
+  @override
+  $ShipmentLocationCopyWith<$Res>? get factoryLocation;
 }
 
 /// @nodoc
@@ -284,6 +361,12 @@ class __$$ShipmentModelImplCopyWithImpl<$Res>
     Object? notes = freezed,
     Object? isCleared = null,
     Object? price = null,
+    Object? factoryId = freezed,
+    Object? factoryLocation = freezed,
+    Object? tripPhase = null,
+    Object? deliveryPolyline = freezed,
+    Object? deliveryDistanceMeters = null,
+    Object? deliveryDurationSeconds = null,
   }) {
     return _then(
       _$ShipmentModelImpl(
@@ -359,6 +442,30 @@ class __$$ShipmentModelImplCopyWithImpl<$Res>
             ? _value.price
             : price // ignore: cast_nullable_to_non_nullable
                   as double,
+        factoryId: freezed == factoryId
+            ? _value.factoryId
+            : factoryId // ignore: cast_nullable_to_non_nullable
+                  as String?,
+        factoryLocation: freezed == factoryLocation
+            ? _value.factoryLocation
+            : factoryLocation // ignore: cast_nullable_to_non_nullable
+                  as ShipmentLocation?,
+        tripPhase: null == tripPhase
+            ? _value.tripPhase
+            : tripPhase // ignore: cast_nullable_to_non_nullable
+                  as String,
+        deliveryPolyline: freezed == deliveryPolyline
+            ? _value.deliveryPolyline
+            : deliveryPolyline // ignore: cast_nullable_to_non_nullable
+                  as String?,
+        deliveryDistanceMeters: null == deliveryDistanceMeters
+            ? _value.deliveryDistanceMeters
+            : deliveryDistanceMeters // ignore: cast_nullable_to_non_nullable
+                  as int,
+        deliveryDurationSeconds: null == deliveryDurationSeconds
+            ? _value.deliveryDurationSeconds
+            : deliveryDurationSeconds // ignore: cast_nullable_to_non_nullable
+                  as int,
       ),
     );
   }
@@ -386,6 +493,12 @@ class _$ShipmentModelImpl implements _ShipmentModel {
     this.notes,
     this.isCleared = false,
     this.price = 0.0,
+    this.factoryId,
+    this.factoryLocation,
+    this.tripPhase = 'pickup',
+    this.deliveryPolyline,
+    this.deliveryDistanceMeters = 0,
+    this.deliveryDurationSeconds = 0,
   });
 
   factory _$ShipmentModelImpl.fromJson(Map<String, dynamic> json) =>
@@ -431,10 +544,37 @@ class _$ShipmentModelImpl implements _ShipmentModel {
   @override
   @JsonKey()
   final double price;
+  // ── Factory-first routing fields ──
+  /// The Edita factory code (e.g. "E06", "E10")
+  @override
+  final String? factoryId;
+
+  /// The factory pickup location (driver goes here first)
+  @override
+  final ShipmentLocation? factoryLocation;
+
+  /// Current trip phase: "pickup" (driver → factory) or "delivery" (factory → destination)
+  @override
+  @JsonKey()
+  final String tripPhase;
+
+  /// Polyline from factory to destination (2nd leg)
+  @override
+  final String? deliveryPolyline;
+
+  /// Distance from factory to destination
+  @override
+  @JsonKey()
+  final int deliveryDistanceMeters;
+
+  /// Duration from factory to destination
+  @override
+  @JsonKey()
+  final int deliveryDurationSeconds;
 
   @override
   String toString() {
-    return 'ShipmentModel(id: $id, clientId: $clientId, driverId: $driverId, status: $status, origin: $origin, destination: $destination, polyline: $polyline, distanceMeters: $distanceMeters, durationSeconds: $durationSeconds, etaTimestamp: $etaTimestamp, createdAt: $createdAt, startedAt: $startedAt, completedAt: $completedAt, clientName: $clientName, driverName: $driverName, notes: $notes, isCleared: $isCleared, price: $price)';
+    return 'ShipmentModel(id: $id, clientId: $clientId, driverId: $driverId, status: $status, origin: $origin, destination: $destination, polyline: $polyline, distanceMeters: $distanceMeters, durationSeconds: $durationSeconds, etaTimestamp: $etaTimestamp, createdAt: $createdAt, startedAt: $startedAt, completedAt: $completedAt, clientName: $clientName, driverName: $driverName, notes: $notes, isCleared: $isCleared, price: $price, factoryId: $factoryId, factoryLocation: $factoryLocation, tripPhase: $tripPhase, deliveryPolyline: $deliveryPolyline, deliveryDistanceMeters: $deliveryDistanceMeters, deliveryDurationSeconds: $deliveryDurationSeconds)';
   }
 
   @override
@@ -472,12 +612,27 @@ class _$ShipmentModelImpl implements _ShipmentModel {
             (identical(other.notes, notes) || other.notes == notes) &&
             (identical(other.isCleared, isCleared) ||
                 other.isCleared == isCleared) &&
-            (identical(other.price, price) || other.price == price));
+            (identical(other.price, price) || other.price == price) &&
+            (identical(other.factoryId, factoryId) ||
+                other.factoryId == factoryId) &&
+            (identical(other.factoryLocation, factoryLocation) ||
+                other.factoryLocation == factoryLocation) &&
+            (identical(other.tripPhase, tripPhase) ||
+                other.tripPhase == tripPhase) &&
+            (identical(other.deliveryPolyline, deliveryPolyline) ||
+                other.deliveryPolyline == deliveryPolyline) &&
+            (identical(other.deliveryDistanceMeters, deliveryDistanceMeters) ||
+                other.deliveryDistanceMeters == deliveryDistanceMeters) &&
+            (identical(
+                  other.deliveryDurationSeconds,
+                  deliveryDurationSeconds,
+                ) ||
+                other.deliveryDurationSeconds == deliveryDurationSeconds));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
-  int get hashCode => Object.hash(
+  int get hashCode => Object.hashAll([
     runtimeType,
     id,
     clientId,
@@ -497,7 +652,13 @@ class _$ShipmentModelImpl implements _ShipmentModel {
     notes,
     isCleared,
     price,
-  );
+    factoryId,
+    factoryLocation,
+    tripPhase,
+    deliveryPolyline,
+    deliveryDistanceMeters,
+    deliveryDurationSeconds,
+  ]);
 
   /// Create a copy of ShipmentModel
   /// with the given fields replaced by the non-null parameter values.
@@ -533,6 +694,12 @@ abstract class _ShipmentModel implements ShipmentModel {
     final String? notes,
     final bool isCleared,
     final double price,
+    final String? factoryId,
+    final ShipmentLocation? factoryLocation,
+    final String tripPhase,
+    final String? deliveryPolyline,
+    final int deliveryDistanceMeters,
+    final int deliveryDurationSeconds,
   }) = _$ShipmentModelImpl;
 
   factory _ShipmentModel.fromJson(Map<String, dynamic> json) =
@@ -573,7 +740,30 @@ abstract class _ShipmentModel implements ShipmentModel {
   @override
   bool get isCleared;
   @override
-  double get price;
+  double get price; // ── Factory-first routing fields ──
+  /// The Edita factory code (e.g. "E06", "E10")
+  @override
+  String? get factoryId;
+
+  /// The factory pickup location (driver goes here first)
+  @override
+  ShipmentLocation? get factoryLocation;
+
+  /// Current trip phase: "pickup" (driver → factory) or "delivery" (factory → destination)
+  @override
+  String get tripPhase;
+
+  /// Polyline from factory to destination (2nd leg)
+  @override
+  String? get deliveryPolyline;
+
+  /// Distance from factory to destination
+  @override
+  int get deliveryDistanceMeters;
+
+  /// Duration from factory to destination
+  @override
+  int get deliveryDurationSeconds;
 
   /// Create a copy of ShipmentModel
   /// with the given fields replaced by the non-null parameter values.

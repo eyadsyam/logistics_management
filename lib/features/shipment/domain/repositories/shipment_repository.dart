@@ -14,6 +14,11 @@ abstract class ShipmentRepository {
     String? polyline,
     int distanceMeters = 0,
     int durationSeconds = 0,
+    String? factoryId,
+    ShipmentLocation? factoryLocation,
+    String? deliveryPolyline,
+    int deliveryDistanceMeters = 0,
+    int deliveryDurationSeconds = 0,
   });
 
   /// Get a single shipment by ID.
@@ -78,4 +83,10 @@ abstract class ShipmentRepository {
 
   /// Clear (Delete) all completed shipments for a specific client.
   Future<Either<Failure, void>> clearCompletedShipments(String clientId);
+
+  /// Update the trip phase of a shipment (pickup → delivery).
+  Future<Either<Failure, void>> updateTripPhase({
+    required String shipmentId,
+    required String tripPhase,
+  });
 }

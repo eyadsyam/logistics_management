@@ -32,6 +32,11 @@ class ShipmentRepositoryImpl implements ShipmentRepository {
     String? polyline,
     int distanceMeters = 0,
     int durationSeconds = 0,
+    String? factoryId,
+    ShipmentLocation? factoryLocation,
+    String? deliveryPolyline,
+    int deliveryDistanceMeters = 0,
+    int deliveryDurationSeconds = 0,
   }) async {
     try {
       final docRef = _shipmentsRef.doc();
@@ -49,11 +54,19 @@ class ShipmentRepositoryImpl implements ShipmentRepository {
         polyline: polyline,
         distanceMeters: distanceMeters,
         durationSeconds: durationSeconds,
+        factoryId: factoryId,
+        factoryLocation: factoryLocation,
+        deliveryPolyline: deliveryPolyline,
+        deliveryDistanceMeters: deliveryDistanceMeters,
+        deliveryDurationSeconds: deliveryDurationSeconds,
       );
 
       final shipmentJson = shipment.toJson();
       shipmentJson['origin'] = shipment.origin.toJson();
       shipmentJson['destination'] = shipment.destination.toJson();
+      if (factoryLocation != null) {
+        shipmentJson['factoryLocation'] = factoryLocation.toJson();
+      }
 
       await docRef.set({
         ...shipmentJson,
@@ -424,5 +437,20 @@ class ShipmentRepositoryImpl implements ShipmentRepository {
     }
 
     return ShipmentModel.fromJson(data);
+  }
+
+  @override
+  Future<Either<Failure, void>> updateTripPhase({
+    required String shipmentId,
+    required String tripPhase,
+  }) async {
+    try {
+      await _shipmentsRef.doc(shipmentId).update({'tripPhase': tripPhase});
+      _logger.i('Trip phase updated to $tripPhase for $shipmentId');
+      return const Right(null);
+    } catch (e) {
+      _logger.e('Update trip phase error: $e');
+      return Left(ServerFailure(message: e.toString()));
+    }
   }
 }

@@ -36,6 +36,18 @@ _$ShipmentModelImpl _$$ShipmentModelImplFromJson(Map<String, dynamic> json) =>
       notes: json['notes'] as String?,
       isCleared: json['isCleared'] as bool? ?? false,
       price: (json['price'] as num?)?.toDouble() ?? 0.0,
+      factoryId: json['factoryId'] as String?,
+      factoryLocation: json['factoryLocation'] == null
+          ? null
+          : ShipmentLocation.fromJson(
+              json['factoryLocation'] as Map<String, dynamic>,
+            ),
+      tripPhase: json['tripPhase'] as String? ?? 'pickup',
+      deliveryPolyline: json['deliveryPolyline'] as String?,
+      deliveryDistanceMeters:
+          (json['deliveryDistanceMeters'] as num?)?.toInt() ?? 0,
+      deliveryDurationSeconds:
+          (json['deliveryDurationSeconds'] as num?)?.toInt() ?? 0,
     );
 
 Map<String, dynamic> _$$ShipmentModelImplToJson(_$ShipmentModelImpl instance) =>
@@ -58,6 +70,12 @@ Map<String, dynamic> _$$ShipmentModelImplToJson(_$ShipmentModelImpl instance) =>
       'notes': instance.notes,
       'isCleared': instance.isCleared,
       'price': instance.price,
+      'factoryId': instance.factoryId,
+      'factoryLocation': instance.factoryLocation,
+      'tripPhase': instance.tripPhase,
+      'deliveryPolyline': instance.deliveryPolyline,
+      'deliveryDistanceMeters': instance.deliveryDistanceMeters,
+      'deliveryDurationSeconds': instance.deliveryDurationSeconds,
     };
 
 _$ShipmentLocationImpl _$$ShipmentLocationImplFromJson(

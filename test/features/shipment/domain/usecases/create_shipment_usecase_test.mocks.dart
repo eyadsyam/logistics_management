@@ -51,6 +51,11 @@ class MockShipmentRepository extends _i1.Mock
     String? polyline,
     int? distanceMeters = 0,
     int? durationSeconds = 0,
+    String? factoryId,
+    _i6.ShipmentLocation? factoryLocation,
+    String? deliveryPolyline,
+    int? deliveryDistanceMeters = 0,
+    int? deliveryDurationSeconds = 0,
   }) =>
       (super.noSuchMethod(
             Invocation.method(#createShipment, [], {
@@ -62,6 +67,11 @@ class MockShipmentRepository extends _i1.Mock
               #polyline: polyline,
               #distanceMeters: distanceMeters,
               #durationSeconds: durationSeconds,
+              #factoryId: factoryId,
+              #factoryLocation: factoryLocation,
+              #deliveryPolyline: deliveryPolyline,
+              #deliveryDistanceMeters: deliveryDistanceMeters,
+              #deliveryDurationSeconds: deliveryDurationSeconds,
             }),
             returnValue:
                 _i4.Future<_i2.Either<_i5.Failure, _i6.ShipmentModel>>.value(
@@ -76,6 +86,11 @@ class MockShipmentRepository extends _i1.Mock
                       #polyline: polyline,
                       #distanceMeters: distanceMeters,
                       #durationSeconds: durationSeconds,
+                      #factoryId: factoryId,
+                      #factoryLocation: factoryLocation,
+                      #deliveryPolyline: deliveryPolyline,
+                      #deliveryDistanceMeters: deliveryDistanceMeters,
+                      #deliveryDurationSeconds: deliveryDurationSeconds,
                     }),
                   ),
                 ),
@@ -327,6 +342,28 @@ class MockShipmentRepository extends _i1.Mock
               _FakeEither_0<_i5.Failure, void>(
                 this,
                 Invocation.method(#clearCompletedShipments, [clientId]),
+              ),
+            ),
+          )
+          as _i4.Future<_i2.Either<_i5.Failure, void>>);
+
+  @override
+  _i4.Future<_i2.Either<_i5.Failure, void>> updateTripPhase({
+    required String? shipmentId,
+    required String? tripPhase,
+  }) =>
+      (super.noSuchMethod(
+            Invocation.method(#updateTripPhase, [], {
+              #shipmentId: shipmentId,
+              #tripPhase: tripPhase,
+            }),
+            returnValue: _i4.Future<_i2.Either<_i5.Failure, void>>.value(
+              _FakeEither_0<_i5.Failure, void>(
+                this,
+                Invocation.method(#updateTripPhase, [], {
+                  #shipmentId: shipmentId,
+                  #tripPhase: tripPhase,
+                }),
               ),
             ),
           )

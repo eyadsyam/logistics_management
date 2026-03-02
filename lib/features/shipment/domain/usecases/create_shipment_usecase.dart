@@ -22,6 +22,11 @@ class CreateShipmentUseCase
       polyline: params.polyline,
       distanceMeters: params.distanceMeters,
       durationSeconds: params.durationSeconds,
+      factoryId: params.factoryId,
+      factoryLocation: params.factoryLocation,
+      deliveryPolyline: params.deliveryPolyline,
+      deliveryDistanceMeters: params.deliveryDistanceMeters,
+      deliveryDurationSeconds: params.deliveryDurationSeconds,
     );
   }
 }
@@ -35,6 +40,12 @@ class CreateShipmentParams {
   final String? polyline;
   final int distanceMeters;
   final int durationSeconds;
+  // Factory-first routing
+  final String? factoryId;
+  final ShipmentLocation? factoryLocation;
+  final String? deliveryPolyline;
+  final int deliveryDistanceMeters;
+  final int deliveryDurationSeconds;
 
   const CreateShipmentParams({
     required this.clientId,
@@ -45,5 +56,10 @@ class CreateShipmentParams {
     this.polyline,
     this.distanceMeters = 0,
     this.durationSeconds = 0,
+    this.factoryId,
+    this.factoryLocation,
+    this.deliveryPolyline,
+    this.deliveryDistanceMeters = 0,
+    this.deliveryDurationSeconds = 0,
   });
 }

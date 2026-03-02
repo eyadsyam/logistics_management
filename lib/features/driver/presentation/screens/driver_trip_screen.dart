@@ -299,16 +299,18 @@ class _DriverTripScreenState extends ConsumerState<DriverTripScreen> {
         size: 80,
       );
 
-      final originMarker = PointAnnotationOptions(
+      final factoryLoc = shipment.factoryLocation ?? shipment.origin;
+      final isPickupPhase = shipment.tripPhase == 'pickup';
+
+      // Factory marker (origin / pickup point)
+      final factoryMarker = PointAnnotationOptions(
         geometry: Point(
-          coordinates: Position(
-            shipment.origin.longitude,
-            shipment.origin.latitude,
-          ),
+          coordinates: Position(factoryLoc.longitude, factoryLoc.latitude),
         ),
         image: originIconBytes,
       );
 
+      // Destination marker (client drop-off)
       final destMarker = PointAnnotationOptions(
         geometry: Point(
           coordinates: Position(
@@ -319,52 +321,87 @@ class _DriverTripScreenState extends ConsumerState<DriverTripScreen> {
         image: destIconBytes,
       );
 
-      await _poiPointManager!.createMulti([originMarker, destMarker]);
+      await _poiPointManager!.createMulti([factoryMarker, destMarker]);
 
-      List<Position> linePoints = [];
-      if (shipment.polyline != null && shipment.polyline!.isNotEmpty) {
-        linePoints = _decodePolyline(shipment.polyline!, precision: 6);
+      // ── Draw pickup leg (driver → factory) ──
+      if (isPickupPhase &&
+          shipment.polyline != null &&
+          shipment.polyline!.isNotEmpty) {
+        final pickupPoints = _decodePolyline(shipment.polyline!, precision: 6);
+        if (pickupPoints.isNotEmpty) {
+          await _polylineManager!.create(
+            PolylineAnnotationOptions(
+              geometry: LineString(coordinates: pickupPoints),
+              lineColor: Colors.deepOrange.toARGB32(),
+              lineWidth: 5.0,
+              lineJoin: LineJoin.ROUND,
+            ),
+          );
+        }
       }
 
-      // 🔄 Fallback: Always draw a straight line if route is missing
-      if (linePoints.isEmpty) {
-        linePoints = [
-          Position(shipment.origin.longitude, shipment.origin.latitude),
-          Position(
-            shipment.destination.longitude,
-            shipment.destination.latitude,
+      // ── Draw delivery leg (factory → destination) ──
+      final deliveryPoly = shipment.deliveryPolyline ?? shipment.polyline;
+      if (deliveryPoly != null && deliveryPoly.isNotEmpty) {
+        final deliveryPoints = _decodePolyline(deliveryPoly, precision: 6);
+        if (deliveryPoints.isNotEmpty) {
+          await _polylineManager!.create(
+            PolylineAnnotationOptions(
+              geometry: LineString(coordinates: deliveryPoints),
+              lineColor: AppColors.primary.toARGB32(),
+              lineWidth: isPickupPhase
+                  ? 3.0
+                  : 5.0, // thinner when viewing both legs
+              lineJoin: LineJoin.ROUND,
+            ),
+          );
+        }
+      }
+
+      // ── Fallback straight line ──
+      if ((shipment.polyline == null || shipment.polyline!.isEmpty) &&
+          (shipment.deliveryPolyline == null ||
+              shipment.deliveryPolyline!.isEmpty)) {
+        await _polylineManager!.create(
+          PolylineAnnotationOptions(
+            geometry: LineString(
+              coordinates: [
+                Position(factoryLoc.longitude, factoryLoc.latitude),
+                Position(
+                  shipment.destination.longitude,
+                  shipment.destination.latitude,
+                ),
+              ],
+            ),
+            lineColor: AppColors.primary.toARGB32(),
+            lineWidth: 5.0,
+            lineJoin: LineJoin.ROUND,
           ),
-        ];
+        );
       }
 
-      if (linePoints.isNotEmpty) {
-        final lineOptions = PolylineAnnotationOptions(
-          geometry: LineString(coordinates: linePoints),
-          lineColor: AppColors.primary.toARGB32(),
-          lineWidth: 5.0,
-          lineJoin: LineJoin.ROUND,
-        );
-        await _polylineManager!.create(lineOptions);
-      }
+      // ── Camera bounds to fit all points ──
+      final allLats = [factoryLoc.latitude, shipment.destination.latitude];
+      final allLngs = [factoryLoc.longitude, shipment.destination.longitude];
 
       final bounds = CoordinateBounds(
         southwest: Point(
           coordinates: Position(
-            math.min(shipment.origin.longitude, shipment.destination.longitude),
-            math.min(shipment.origin.latitude, shipment.destination.latitude),
+            allLngs.reduce(math.min),
+            allLats.reduce(math.min),
           ),
         ),
         northeast: Point(
           coordinates: Position(
-            math.max(shipment.origin.longitude, shipment.destination.longitude),
-            math.max(shipment.origin.latitude, shipment.destination.latitude),
+            allLngs.reduce(math.max),
+            allLats.reduce(math.max),
           ),
         ),
         infiniteBounds: true,
       );
       final cameraOptions = await _mapController!.cameraForCoordinateBounds(
         bounds,
-        MbxEdgeInsets(top: 150, left: 60, bottom: 250, right: 60),
+        MbxEdgeInsets(top: 150, left: 60, bottom: 280, right: 60),
         null,
         null,
         null,
@@ -561,12 +598,15 @@ class _DriverTripScreenState extends ConsumerState<DriverTripScreen> {
   }
 
   Widget _buildStartTripPanel(BuildContext context, ShipmentModel shipment) {
+    final factoryLoc = shipment.factoryLocation ?? shipment.origin;
+    final isPickupPhase = shipment.tripPhase == 'pickup';
+
     return Container(
       padding: EdgeInsets.fromLTRB(
         20,
+        16,
         20,
-        20,
-        MediaQuery.of(context).padding.bottom + 20,
+        MediaQuery.of(context).padding.bottom + 16,
       ),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -592,80 +632,190 @@ class _DriverTripScreenState extends ConsumerState<DriverTripScreen> {
               ),
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 12),
+
+          // ── Phase indicator ──
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: isPickupPhase
+                  ? Colors.deepOrange.withValues(alpha: 0.1)
+                  : AppColors.primary.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  isPickupPhase
+                      ? Icons.factory_rounded
+                      : Icons.local_shipping_rounded,
+                  size: 16,
+                  color: isPickupPhase ? Colors.deepOrange : AppColors.primary,
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  isPickupPhase
+                      ? 'PHASE 1 — FACTORY PICKUP'
+                      : 'PHASE 2 — DELIVERY',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 1,
+                    color: isPickupPhase
+                        ? Colors.deepOrange
+                        : AppColors.primary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 14),
+
+          // ── Route info ──
+          // Leg 1: Factory
           Row(
             children: [
+              Container(
+                width: 32,
+                height: 32,
+                decoration: BoxDecoration(
+                  color: Colors.deepOrange.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(
+                  Icons.factory_rounded,
+                  color: Colors.deepOrange,
+                  size: 18,
+                ),
+              ),
+              const SizedBox(width: 10),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'Pickup',
-                      style: TextStyle(color: Colors.grey, fontSize: 12),
+                    Text(
+                      'Factory: ${shipment.factoryId ?? 'Edita'}',
+                      style: const TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.deepOrange,
+                        letterSpacing: 0.5,
+                      ),
                     ),
                     Text(
-                      shipment.origin.address,
+                      factoryLoc.address,
                       style: const TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 16,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
                       ),
-                      maxLines: 2,
+                      maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                ),
-              ),
-              const Icon(Icons.arrow_forward_rounded, color: Colors.grey),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    const Text(
-                      'Drop-off',
-                      style: TextStyle(color: Colors.grey, fontSize: 12),
-                    ),
-                    Text(
-                      shipment.destination.address,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 16,
-                      ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      textAlign: TextAlign.end,
                     ),
                   ],
                 ),
               ),
             ],
           ),
-          if (shipment.distanceMeters > 0) ...[
+          const Padding(
+            padding: EdgeInsets.only(left: 15),
+            child: SizedBox(
+              height: 12,
+              child: VerticalDivider(
+                width: 1,
+                thickness: 1.5,
+                color: AppColors.glassBorder,
+              ),
+            ),
+          ),
+          // Leg 2: Destination
+          Row(
+            children: [
+              Container(
+                width: 32,
+                height: 32,
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(
+                  Icons.location_on_rounded,
+                  color: AppColors.primary,
+                  size: 18,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'DELIVERY DESTINATION',
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.primary,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                    Text(
+                      shipment.destination.address,
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+
+          // ── Distance / Duration for both legs ──
+          if (shipment.distanceMeters > 0 ||
+              shipment.deliveryDistanceMeters > 0) ...[
             const SizedBox(height: 12),
             Row(
-              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                const Icon(
-                  Icons.straighten_rounded,
-                  color: Colors.grey,
-                  size: 16,
-                ),
-                const SizedBox(width: 4),
-                Text(
-                  '${(shipment.distanceMeters / 1000).toStringAsFixed(1)} km',
-                  style: const TextStyle(color: Colors.grey, fontSize: 14),
-                ),
-                const SizedBox(width: 16),
-                const Icon(Icons.timer_outlined, color: Colors.grey, size: 16),
-                const SizedBox(width: 4),
-                Text(
-                  '${(shipment.durationSeconds / 60).round()} min',
-                  style: const TextStyle(color: Colors.grey, fontSize: 14),
-                ),
+                // Pickup leg info
+                if (shipment.distanceMeters > 0)
+                  _buildLegChip(
+                    'Pickup',
+                    '${(shipment.distanceMeters / 1000).toStringAsFixed(1)} km',
+                    '${(shipment.durationSeconds / 60).round()} min',
+                    Colors.deepOrange,
+                  ),
+                // Delivery leg info
+                if (shipment.deliveryDistanceMeters > 0)
+                  _buildLegChip(
+                    'Delivery',
+                    '${(shipment.deliveryDistanceMeters / 1000).toStringAsFixed(1)} km',
+                    '${(shipment.deliveryDurationSeconds / 60).round()} min',
+                    AppColors.primary,
+                  ),
               ],
             ),
           ],
-          const SizedBox(height: 20),
+
+          // ── Price ──
+          if (shipment.price > 0) ...[
+            const SizedBox(height: 8),
+            Text(
+              'EGP ${shipment.price.toStringAsFixed(0)}',
+              style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w800,
+                color: AppColors.primary,
+              ),
+            ),
+          ],
+
+          const SizedBox(height: 14),
+
+          // ── Action Button ──
           SizedBox(
             width: double.infinity,
             height: 54,
@@ -708,6 +858,49 @@ class _DriverTripScreenState extends ConsumerState<DriverTripScreen> {
                 ),
               ),
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLegChip(
+    String label,
+    String distance,
+    String duration,
+    Color color,
+  ) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: color.withValues(alpha: 0.2)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+              color: color,
+            ),
+          ),
+          const SizedBox(width: 6),
+          const Icon(Icons.straighten_rounded, color: Colors.grey, size: 13),
+          const SizedBox(width: 2),
+          Text(
+            distance,
+            style: const TextStyle(fontSize: 12, color: Colors.grey),
+          ),
+          const SizedBox(width: 6),
+          const Icon(Icons.timer_outlined, color: Colors.grey, size: 13),
+          const SizedBox(width: 2),
+          Text(
+            duration,
+            style: const TextStyle(fontSize: 12, color: Colors.grey),
           ),
         ],
       ),
@@ -779,19 +972,15 @@ class _DriverTripScreenState extends ConsumerState<DriverTripScreen> {
   }
 
   Widget _buildNavigationPanel(BuildContext context, ShipmentModel shipment) {
-    // Determine ETA time dynamically (if 0 or uncalculated, we show placeholders)
+    final isPickupPhase = shipment.tripPhase == 'pickup';
+
+    // Determine ETA time dynamically
     final bool hasData =
         shipment.durationSeconds > 0 && shipment.distanceMeters > 0;
     String minStr = 'Calculating...';
     String kmStr = '- km';
-    String formatTime = '--:--';
 
     if (hasData) {
-      final etaTime = DateTime.now().add(
-        Duration(seconds: shipment.durationSeconds),
-      );
-      formatTime =
-          '${etaTime.hour > 12 ? etaTime.hour - 12 : (etaTime.hour == 0 ? 12 : etaTime.hour)}:${etaTime.minute.toString().padLeft(2, '0')} ${etaTime.hour >= 12 ? 'pm' : 'am'}';
       minStr = '${(shipment.durationSeconds / 60).round()} min';
       kmStr = '${(shipment.distanceMeters / 1000).toStringAsFixed(1)} km';
     }
@@ -804,7 +993,7 @@ class _DriverTripScreenState extends ConsumerState<DriverTripScreen> {
         MediaQuery.of(context).padding.bottom + 20,
       ),
       decoration: BoxDecoration(
-        color: AppColors.cardLight.withValues(alpha: 0.95), // Bright App Theme
+        color: AppColors.cardLight.withValues(alpha: 0.95),
         borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
         border: const Border(
           top: BorderSide(color: AppColors.glassBorder, width: 0.5),
@@ -824,13 +1013,37 @@ class _DriverTripScreenState extends ConsumerState<DriverTripScreen> {
             child: Container(
               width: 40,
               height: 4,
-              margin: const EdgeInsets.only(bottom: 16),
+              margin: const EdgeInsets.only(bottom: 12),
               decoration: BoxDecoration(
                 color: Colors.grey.shade300,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
           ),
+
+          // Phase label
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+            decoration: BoxDecoration(
+              color: isPickupPhase
+                  ? Colors.deepOrange.withValues(alpha: 0.1)
+                  : AppColors.success.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Text(
+              isPickupPhase
+                  ? '🏭  HEADING TO FACTORY'
+                  : '🚚  DELIVERING TO CLIENT',
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w800,
+                letterSpacing: 1,
+                color: isPickupPhase ? Colors.deepOrange : AppColors.success,
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             crossAxisAlignment: CrossAxisAlignment.end,
@@ -842,31 +1055,18 @@ class _DriverTripScreenState extends ConsumerState<DriverTripScreen> {
               Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        minStr,
-                        style: const TextStyle(
-                          color: AppColors.primary, // Orange primary text
-                          fontSize: 32,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      // Small delivery truck icon
-                      if (hasData)
-                        const Icon(
-                          Icons.local_shipping,
-                          color: AppColors.success,
-                          size: 24,
-                        ),
-                    ],
+                  Text(
+                    minStr,
+                    style: const TextStyle(
+                      color: AppColors.primary,
+                      fontSize: 32,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   const SizedBox(height: 4),
                   if (hasData)
                     Text(
-                      '$kmStr • $formatTime',
+                      kmStr,
                       style: const TextStyle(
                         color: AppColors.textHint,
                         fontSize: 16,
@@ -875,7 +1075,7 @@ class _DriverTripScreenState extends ConsumerState<DriverTripScreen> {
                     )
                   else
                     const Text(
-                      'Fetching actual route...',
+                      'Fetching route...',
                       style: TextStyle(color: AppColors.textHint),
                     ),
                 ],
@@ -890,12 +1090,16 @@ class _DriverTripScreenState extends ConsumerState<DriverTripScreen> {
               ),
             ],
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 16),
+
+          // ── Phase-Aware Action Button ──
           SizedBox(
             width: double.infinity,
             height: 54,
             child: ElevatedButton.icon(
-              onPressed: _isProcessing ? null : _completeTrip,
+              onPressed: _isProcessing
+                  ? null
+                  : (isPickupPhase ? _markPickedUp : _completeTrip),
               icon: _isProcessing
                   ? const SizedBox(
                       height: 20,
@@ -905,21 +1109,27 @@ class _DriverTripScreenState extends ConsumerState<DriverTripScreen> {
                         color: Colors.white,
                       ),
                     )
-                  : const Icon(
-                      Icons.check_circle_rounded,
+                  : Icon(
+                      isPickupPhase
+                          ? Icons.inventory_rounded
+                          : Icons.check_circle_rounded,
                       size: 24,
                       color: Colors.white,
                     ),
-              label: const Text(
-                'Complete Delivery',
-                style: TextStyle(
-                  fontSize: 18,
+              label: Text(
+                isPickupPhase
+                    ? 'Picked Up — Start Delivery'
+                    : 'Complete Delivery',
+                style: const TextStyle(
+                  fontSize: 17,
                   fontWeight: FontWeight.bold,
                   color: Colors.white,
                 ),
               ),
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.success,
+                backgroundColor: isPickupPhase
+                    ? Colors.deepOrange
+                    : AppColors.success,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(16),
                 ),
@@ -929,5 +1139,16 @@ class _DriverTripScreenState extends ConsumerState<DriverTripScreen> {
         ],
       ),
     );
+  }
+
+  /// Mark shipment as picked up from factory and transition to delivery phase.
+  Future<void> _markPickedUp() async {
+    setState(() => _isProcessing = true);
+
+    await ref
+        .read(shipmentRepositoryProvider)
+        .updateTripPhase(shipmentId: widget.shipmentId, tripPhase: 'delivery');
+
+    setState(() => _isProcessing = false);
   }
 }

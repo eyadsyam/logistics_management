@@ -8,6 +8,7 @@ import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
 import '../../../../app/providers/app_providers.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_constants.dart';
+import '../../../../core/data/edita_factories.dart';
 import '../../../../core/utils/error_handler.dart';
 import '../../../../core/utils/map_marker_util.dart';
 import '../../../map/data/services/mapbox_service.dart';
@@ -572,18 +573,50 @@ class _CreateShipmentScreenState extends ConsumerState<CreateShipmentScreen>
     final currentUser = ref.read(currentUserProvider);
     if (currentUser == null) return;
 
+    // ── Resolve the Edita factory for the selected product ──
+    final factory = getFactoryForBrand(_selectedPackage.label);
+    final factoryLoc = ShipmentLocation(
+      latitude: factory.latitude,
+      longitude: factory.longitude,
+      address: factory.address,
+      city: factory.city,
+    );
+
+    // ── Compute factory → destination route (delivery leg) ──
+    final deliveryRoute = await ref
+        .read(mapboxServiceProvider)
+        .getDirections(
+          originLat: factory.latitude,
+          originLng: factory.longitude,
+          destLat: _destination!.latitude,
+          destLng: _destination!.longitude,
+        );
+
     final result = await ref
         .read(createShipmentUseCaseProvider)
         .call(
           CreateShipmentParams(
             clientId: currentUser.id,
-            origin: _origin!,
-            destination: _destination!,
+            origin: factoryLoc, // Origin = factory pickup
+            destination: _destination!, // Destination = client drop-off
             notes: _buildNotesString(),
             price: _estimatedCost,
-            polyline: _routeInfo?.polyline,
-            distanceMeters: _routeInfo?.distanceMeters ?? 0,
-            durationSeconds: _routeInfo?.durationSeconds ?? 0,
+            // Polyline/distance/duration = full route from factory → destination
+            polyline: deliveryRoute?.polyline ?? _routeInfo?.polyline,
+            distanceMeters:
+                deliveryRoute?.distanceMeters ??
+                _routeInfo?.distanceMeters ??
+                0,
+            durationSeconds:
+                deliveryRoute?.durationSeconds ??
+                _routeInfo?.durationSeconds ??
+                0,
+            // Factory metadata
+            factoryId: factory.id,
+            factoryLocation: factoryLoc,
+            deliveryPolyline: deliveryRoute?.polyline,
+            deliveryDistanceMeters: deliveryRoute?.distanceMeters ?? 0,
+            deliveryDurationSeconds: deliveryRoute?.durationSeconds ?? 0,
           ),
         );
 

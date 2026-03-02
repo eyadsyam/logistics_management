@@ -25,6 +25,24 @@ abstract class ShipmentModel with _$ShipmentModel {
     String? notes,
     @Default(false) bool isCleared,
     @Default(0.0) double price,
+    // ── Factory-first routing fields ──
+    /// The Edita factory code (e.g. "E06", "E10")
+    String? factoryId,
+
+    /// The factory pickup location (driver goes here first)
+    ShipmentLocation? factoryLocation,
+
+    /// Current trip phase: "pickup" (driver → factory) or "delivery" (factory → destination)
+    @Default('pickup') String tripPhase,
+
+    /// Polyline from factory to destination (2nd leg)
+    String? deliveryPolyline,
+
+    /// Distance from factory to destination
+    @Default(0) int deliveryDistanceMeters,
+
+    /// Duration from factory to destination
+    @Default(0) int deliveryDurationSeconds,
   }) = _ShipmentModel;
 
   factory ShipmentModel.fromJson(Map<String, dynamic> json) =>
