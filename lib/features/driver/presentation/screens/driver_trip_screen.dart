@@ -64,7 +64,7 @@ class _DriverTripScreenState extends ConsumerState<DriverTripScreen> {
               .addLocationPoint(shipmentId: widget.shipmentId, point: cached);
         }
 
-        // Send current point
+        // Update driver location in Firestore
         await ref
             .read(driverRepositoryProvider)
             .updateLocation(
@@ -75,7 +75,7 @@ class _DriverTripScreenState extends ConsumerState<DriverTripScreen> {
               ),
             );
 
-        _updateDriverMarker(point.latitude, point.longitude);
+        _updateDriverMarker(point);
 
         await ref
             .read(shipmentRepositoryProvider)
@@ -90,13 +90,16 @@ class _DriverTripScreenState extends ConsumerState<DriverTripScreen> {
     };
   }
 
-  Future<void> _updateDriverMarker(double lat, double lng) async {
+  Future<void> _updateDriverMarker(LocationPoint locPoint) async {
     if (_mapController == null) return;
     try {
       _driverPointManager ??= await _mapController!.annotations
           .createPointAnnotationManager();
 
-      final point = Point(coordinates: Position(lng, lat));
+      final point = Point(
+        coordinates: Position(locPoint.longitude, locPoint.latitude),
+      );
+
       if (_driverAnnotation == null) {
         final iconBytes = await MapMarkerUtil.getCarMarkerBytes(size: 150);
         _driverAnnotation = await _driverPointManager!.create(
@@ -104,11 +107,26 @@ class _DriverTripScreenState extends ConsumerState<DriverTripScreen> {
             geometry: point,
             image: iconBytes,
             iconSize: 1.0,
+            iconRotate: locPoint.heading, // Rotate driver car
           ),
         );
       } else {
         _driverAnnotation?.geometry = point;
+        _driverAnnotation?.iconRotate = locPoint.heading; // Update rotation
         await _driverPointManager!.update(_driverAnnotation!);
+      }
+
+      // ── LIVE TRACKING ASSISTANT ──
+      // Camera actively follows the driver with a GPS navigation perspective
+      if (_isTripStarted) {
+        _mapController!.setCamera(
+          CameraOptions(
+            center: point,
+            zoom: 17.5, // High zoom for navigation
+            pitch: 45.0, // 3D tilt
+            bearing: locPoint.heading > 0 ? locPoint.heading : null,
+          ),
+        );
       }
     } catch (e) {
       debugPrint('Error updating driver local marker: $e');
@@ -201,6 +219,7 @@ class _DriverTripScreenState extends ConsumerState<DriverTripScreen> {
               longitude: currentPos.longitude,
               speed: currentPos.speed,
               accuracy: currentPos.accuracy,
+              heading: currentPos.heading,
               timestamp: currentPos.timestamp,
             ),
           );
@@ -657,7 +676,16 @@ class _DriverTripScreenState extends ConsumerState<DriverTripScreen> {
                         .read(locationServiceProvider)
                         .getCurrentPosition();
                     if (pos != null) {
-                      _updateDriverMarker(pos.latitude, pos.longitude);
+                      _updateDriverMarker(
+                        LocationPoint(
+                          latitude: pos.latitude,
+                          longitude: pos.longitude,
+                          speed: pos.speed,
+                          accuracy: pos.accuracy,
+                          heading: pos.heading,
+                          timestamp: pos.timestamp,
+                        ),
+                      );
                     }
 
                     // Compute routes from driver→factory & factory→destination
@@ -1161,6 +1189,7 @@ class _DriverTripScreenState extends ConsumerState<DriverTripScreen> {
                   longitude: pos.longitude,
                   speed: pos.speed,
                   accuracy: pos.accuracy,
+                  heading: pos.heading,
                   timestamp: pos.timestamp,
                 ),
               );

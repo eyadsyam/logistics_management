@@ -142,6 +142,7 @@ class LocationService {
       longitude: position.longitude,
       speed: position.speed,
       accuracy: position.accuracy,
+      heading: position.heading,
       timestamp: now,
     );
 

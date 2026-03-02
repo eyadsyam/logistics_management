@@ -72,6 +72,7 @@ abstract class LocationPoint with _$LocationPoint {
     required double longitude,
     required double speed,
     required double accuracy,
+    @Default(0.0) double heading,
     required DateTime timestamp,
     @Default(false) bool isSynced,
   }) = _LocationPoint;

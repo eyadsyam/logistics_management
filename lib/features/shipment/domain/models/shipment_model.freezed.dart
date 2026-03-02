@@ -1033,6 +1033,7 @@ mixin _$LocationPoint {
   double get longitude => throw _privateConstructorUsedError;
   double get speed => throw _privateConstructorUsedError;
   double get accuracy => throw _privateConstructorUsedError;
+  double get heading => throw _privateConstructorUsedError;
   DateTime get timestamp => throw _privateConstructorUsedError;
   bool get isSynced => throw _privateConstructorUsedError;
 
@@ -1058,6 +1059,7 @@ abstract class $LocationPointCopyWith<$Res> {
     double longitude,
     double speed,
     double accuracy,
+    double heading,
     DateTime timestamp,
     bool isSynced,
   });
@@ -1082,6 +1084,7 @@ class _$LocationPointCopyWithImpl<$Res, $Val extends LocationPoint>
     Object? longitude = null,
     Object? speed = null,
     Object? accuracy = null,
+    Object? heading = null,
     Object? timestamp = null,
     Object? isSynced = null,
   }) {
@@ -1102,6 +1105,10 @@ class _$LocationPointCopyWithImpl<$Res, $Val extends LocationPoint>
             accuracy: null == accuracy
                 ? _value.accuracy
                 : accuracy // ignore: cast_nullable_to_non_nullable
+                      as double,
+            heading: null == heading
+                ? _value.heading
+                : heading // ignore: cast_nullable_to_non_nullable
                       as double,
             timestamp: null == timestamp
                 ? _value.timestamp
@@ -1131,6 +1138,7 @@ abstract class _$$LocationPointImplCopyWith<$Res>
     double longitude,
     double speed,
     double accuracy,
+    double heading,
     DateTime timestamp,
     bool isSynced,
   });
@@ -1154,6 +1162,7 @@ class __$$LocationPointImplCopyWithImpl<$Res>
     Object? longitude = null,
     Object? speed = null,
     Object? accuracy = null,
+    Object? heading = null,
     Object? timestamp = null,
     Object? isSynced = null,
   }) {
@@ -1174,6 +1183,10 @@ class __$$LocationPointImplCopyWithImpl<$Res>
         accuracy: null == accuracy
             ? _value.accuracy
             : accuracy // ignore: cast_nullable_to_non_nullable
+                  as double,
+        heading: null == heading
+            ? _value.heading
+            : heading // ignore: cast_nullable_to_non_nullable
                   as double,
         timestamp: null == timestamp
             ? _value.timestamp
@@ -1196,6 +1209,7 @@ class _$LocationPointImpl implements _LocationPoint {
     required this.longitude,
     required this.speed,
     required this.accuracy,
+    this.heading = 0.0,
     required this.timestamp,
     this.isSynced = false,
   });
@@ -1212,6 +1226,9 @@ class _$LocationPointImpl implements _LocationPoint {
   @override
   final double accuracy;
   @override
+  @JsonKey()
+  final double heading;
+  @override
   final DateTime timestamp;
   @override
   @JsonKey()
@@ -1219,7 +1236,7 @@ class _$LocationPointImpl implements _LocationPoint {
 
   @override
   String toString() {
-    return 'LocationPoint(latitude: $latitude, longitude: $longitude, speed: $speed, accuracy: $accuracy, timestamp: $timestamp, isSynced: $isSynced)';
+    return 'LocationPoint(latitude: $latitude, longitude: $longitude, speed: $speed, accuracy: $accuracy, heading: $heading, timestamp: $timestamp, isSynced: $isSynced)';
   }
 
   @override
@@ -1234,6 +1251,7 @@ class _$LocationPointImpl implements _LocationPoint {
             (identical(other.speed, speed) || other.speed == speed) &&
             (identical(other.accuracy, accuracy) ||
                 other.accuracy == accuracy) &&
+            (identical(other.heading, heading) || other.heading == heading) &&
             (identical(other.timestamp, timestamp) ||
                 other.timestamp == timestamp) &&
             (identical(other.isSynced, isSynced) ||
@@ -1248,6 +1266,7 @@ class _$LocationPointImpl implements _LocationPoint {
     longitude,
     speed,
     accuracy,
+    heading,
     timestamp,
     isSynced,
   );
@@ -1272,6 +1291,7 @@ abstract class _LocationPoint implements LocationPoint {
     required final double longitude,
     required final double speed,
     required final double accuracy,
+    final double heading,
     required final DateTime timestamp,
     final bool isSynced,
   }) = _$LocationPointImpl;
@@ -1287,6 +1307,8 @@ abstract class _LocationPoint implements LocationPoint {
   double get speed;
   @override
   double get accuracy;
+  @override
+  double get heading;
   @override
   DateTime get timestamp;
   @override

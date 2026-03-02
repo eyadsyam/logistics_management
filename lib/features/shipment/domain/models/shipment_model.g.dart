@@ -104,6 +104,7 @@ _$LocationPointImpl _$$LocationPointImplFromJson(Map<String, dynamic> json) =>
       longitude: (json['longitude'] as num).toDouble(),
       speed: (json['speed'] as num).toDouble(),
       accuracy: (json['accuracy'] as num).toDouble(),
+      heading: (json['heading'] as num?)?.toDouble() ?? 0.0,
       timestamp: DateTime.parse(json['timestamp'] as String),
       isSynced: json['isSynced'] as bool? ?? false,
     );
@@ -114,6 +115,7 @@ Map<String, dynamic> _$$LocationPointImplToJson(_$LocationPointImpl instance) =>
       'longitude': instance.longitude,
       'speed': instance.speed,
       'accuracy': instance.accuracy,
+      'heading': instance.heading,
       'timestamp': instance.timestamp.toIso8601String(),
       'isSynced': instance.isSynced,
     };
