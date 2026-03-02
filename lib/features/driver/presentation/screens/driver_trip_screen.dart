@@ -943,19 +943,26 @@ class _DriverTripScreenState extends ConsumerState<DriverTripScreen> {
               children: [
                 // Pickup leg info
                 if (shipment.distanceMeters > 0)
-                  _buildLegChip(
-                    'Pickup',
-                    '${(shipment.distanceMeters / 1000).toStringAsFixed(1)} km',
-                    '${(shipment.durationSeconds / 60).round()} min',
-                    AppColors.info,
+                  Expanded(
+                    child: _buildLegChip(
+                      'Pickup',
+                      '${(shipment.distanceMeters / 1000).toStringAsFixed(1)} km',
+                      '${(shipment.durationSeconds / 60).round()} min',
+                      AppColors.info,
+                    ),
                   ),
+                if (shipment.distanceMeters > 0 &&
+                    shipment.deliveryDistanceMeters > 0)
+                  const SizedBox(width: 8),
                 // Delivery leg info
                 if (shipment.deliveryDistanceMeters > 0)
-                  _buildLegChip(
-                    'Delivery',
-                    '${(shipment.deliveryDistanceMeters / 1000).toStringAsFixed(1)} km',
-                    '${(shipment.deliveryDurationSeconds / 60).round()} min',
-                    AppColors.accent,
+                  Expanded(
+                    child: _buildLegChip(
+                      'Delivery',
+                      '${(shipment.deliveryDistanceMeters / 1000).toStringAsFixed(1)} km',
+                      '${(shipment.deliveryDurationSeconds / 60).round()} min',
+                      AppColors.accent,
+                    ),
                   ),
               ],
             ),
@@ -1055,38 +1062,49 @@ class _DriverTripScreenState extends ConsumerState<DriverTripScreen> {
     Color color,
   ) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(10),
         border: Border.all(color: color.withValues(alpha: 0.2)),
       ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w700,
-              color: color,
+      child: FittedBox(
+        fit: BoxFit.scaleDown,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w800,
+                color: color,
+              ),
             ),
-          ),
-          const SizedBox(width: 6),
-          const Icon(Icons.straighten_rounded, color: Colors.grey, size: 13),
-          const SizedBox(width: 2),
-          Text(
-            distance,
-            style: const TextStyle(fontSize: 12, color: Colors.grey),
-          ),
-          const SizedBox(width: 6),
-          const Icon(Icons.timer_outlined, color: Colors.grey, size: 13),
-          const SizedBox(width: 2),
-          Text(
-            duration,
-            style: const TextStyle(fontSize: 12, color: Colors.grey),
-          ),
-        ],
+            const SizedBox(width: 6),
+            const Icon(Icons.straighten_rounded, color: Colors.grey, size: 13),
+            const SizedBox(width: 2),
+            Text(
+              distance,
+              style: const TextStyle(
+                fontSize: 12,
+                color: Colors.grey,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(width: 6),
+            const Icon(Icons.timer_outlined, color: Colors.grey, size: 13),
+            const SizedBox(width: 2),
+            Text(
+              duration,
+              style: const TextStyle(
+                fontSize: 12,
+                color: Colors.grey,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

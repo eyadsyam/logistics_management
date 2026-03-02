@@ -590,18 +590,25 @@ class _ShipmentTrackingScreenState
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
                 if (shipment.distanceMeters > 0)
-                  _buildLegChip(
-                    isPickup ? 'To Factory' : 'To Destination',
-                    _formatDistance(shipment.distanceMeters),
-                    _formatDuration(shipment.durationSeconds),
-                    isPickup ? AppColors.accent : AppColors.info,
+                  Expanded(
+                    child: _buildLegChip(
+                      isPickup ? 'To Factory' : 'To Destination',
+                      _formatDistance(shipment.distanceMeters),
+                      _formatDuration(shipment.durationSeconds),
+                      isPickup ? AppColors.info : AppColors.accent,
+                    ),
                   ),
+                if (shipment.distanceMeters > 0 &&
+                    shipment.deliveryDistanceMeters > 0)
+                  const SizedBox(width: 8),
                 if (shipment.deliveryDistanceMeters > 0)
-                  _buildLegChip(
-                    'Delivery Leg',
-                    _formatDistance(shipment.deliveryDistanceMeters),
-                    _formatDuration(shipment.deliveryDurationSeconds),
-                    AppColors.info,
+                  Expanded(
+                    child: _buildLegChip(
+                      'Delivery Leg',
+                      _formatDistance(shipment.deliveryDistanceMeters),
+                      _formatDuration(shipment.deliveryDurationSeconds),
+                      AppColors.accent,
+                    ),
                   ),
               ],
             ),
@@ -669,31 +676,34 @@ class _ShipmentTrackingScreenState
     Color color,
   ) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(12),
       ),
-      child: Column(
-        children: [
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 10,
-              fontWeight: FontWeight.w700,
-              color: color,
+      child: FittedBox(
+        fit: BoxFit.scaleDown,
+        child: Column(
+          children: [
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 10,
+                fontWeight: FontWeight.w700,
+                color: color,
+              ),
             ),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            '$distance • $duration',
-            style: const TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              color: AppColors.textPrimary,
+            const SizedBox(height: 2),
+            Text(
+              '$distance • $duration',
+              style: const TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textPrimary,
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
