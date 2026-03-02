@@ -47,6 +47,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     // ── Cache ref properties BEFORE any async gap! ──
     // This is the absolute root cause of FlutterError (Widget unmounted).
     final locService = ref.read(locationServiceProvider);
+    final splashNotifier = ref.read(splashCompleteProvider.notifier);
 
     // ── 1. Branding time ──
     await Future.delayed(const Duration(seconds: 2));
@@ -66,10 +67,12 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
         ),
       );
     } catch (_) {}
-    if (!mounted) return;
 
     // ── 4. Signal completion — GoRouter redirect will navigate ──
-    ref.read(splashCompleteProvider.notifier).state = true;
+    // Use the cached notifier instead of 'ref' to avoid using BuildContext
+    // after an async gap, which can throw even if 'mounted' is true but the
+    // element is in an inactive state.
+    splashNotifier.state = true;
   }
 
   @override
