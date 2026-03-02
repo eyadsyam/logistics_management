@@ -597,23 +597,19 @@ class _CreateShipmentScreenState extends ConsumerState<CreateShipmentScreen>
         .call(
           CreateShipmentParams(
             clientId: currentUser.id,
-            origin: factoryLoc, // Origin = factory pickup
+            origin: factoryLoc, // Origin = factory pickup point
             destination: _destination!, // Destination = client drop-off
             notes: _buildNotesString(),
             price: _estimatedCost,
-            // Polyline/distance/duration = full route from factory → destination
-            polyline: deliveryRoute?.polyline ?? _routeInfo?.polyline,
-            distanceMeters:
-                deliveryRoute?.distanceMeters ??
-                _routeInfo?.distanceMeters ??
-                0,
-            durationSeconds:
-                deliveryRoute?.durationSeconds ??
-                _routeInfo?.durationSeconds ??
-                0,
+            // Leave polyline/distance/duration empty — driver's trip screen
+            // will compute the pickup route (driver → factory) on open.
+            polyline: null,
+            distanceMeters: 0,
+            durationSeconds: 0,
             // Factory metadata
             factoryId: factory.id,
             factoryLocation: factoryLoc,
+            // Delivery leg (factory → destination) — pre-computed
             deliveryPolyline: deliveryRoute?.polyline,
             deliveryDistanceMeters: deliveryRoute?.distanceMeters ?? 0,
             deliveryDurationSeconds: deliveryRoute?.durationSeconds ?? 0,

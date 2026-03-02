@@ -307,6 +307,19 @@ class _DriverTripScreenState extends ConsumerState<DriverTripScreen> {
       final factoryLoc = shipment.factoryLocation ?? shipment.origin;
       final isPickupPhase = shipment.tripPhase == 'pickup';
 
+      debugPrint('=== _drawShipmentRoute ===');
+      debugPrint('tripPhase: ${shipment.tripPhase}, isPickup: $isPickupPhase');
+      debugPrint(
+        'factoryLoc: ${factoryLoc.latitude}, ${factoryLoc.longitude} (${factoryLoc.address})',
+      );
+      debugPrint(
+        'destination: ${shipment.destination.latitude}, ${shipment.destination.longitude}',
+      );
+      debugPrint('polyline: ${shipment.polyline?.length ?? 0} chars');
+      debugPrint(
+        'deliveryPolyline: ${shipment.deliveryPolyline?.length ?? 0} chars',
+      );
+
       // ── Generate labeled marker images ──
       final factoryIconBytes = await MapMarkerUtil.getLabeledMarkerBytes(
         label: 'Factory ${shipment.factoryId ?? 'Edita'}',
@@ -487,13 +500,41 @@ class _DriverTripScreenState extends ConsumerState<DriverTripScreen> {
 
   /// Compute initial routes when the driver first opens the screen.
   Future<void> _computeInitialRoutes(ShipmentModel shipment) async {
+    debugPrint('=== _computeInitialRoutes START ===');
+    debugPrint(
+      'factoryLocation: ${shipment.factoryLocation?.latitude}, ${shipment.factoryLocation?.longitude}',
+    );
+    debugPrint(
+      'origin: ${shipment.origin.latitude}, ${shipment.origin.longitude}',
+    );
+    debugPrint(
+      'destination: ${shipment.destination.latitude}, ${shipment.destination.longitude}',
+    );
+    debugPrint('factoryId: ${shipment.factoryId}');
+    debugPrint('existing polyline length: ${shipment.polyline?.length ?? 0}');
+    debugPrint(
+      'existing deliveryPolyline length: ${shipment.deliveryPolyline?.length ?? 0}',
+    );
+
     final pos = await ref.read(locationServiceProvider).getCurrentPosition();
-    if (pos == null) return;
+    if (pos == null) {
+      debugPrint('ERROR: Could not get driver position');
+      return;
+    }
+    debugPrint('Driver position: ${pos.latitude}, ${pos.longitude}');
 
     final mapboxService = ref.read(mapboxServiceProvider);
     final factoryLoc = shipment.factoryLocation ?? shipment.origin;
+    debugPrint(
+      'Using factory coords: ${factoryLoc.latitude}, ${factoryLoc.longitude}',
+    );
 
-    // Leg 1: Driver → Factory
+    final updateData = <String, dynamic>{};
+
+    // Leg 1: Driver → Factory (pickup)
+    debugPrint(
+      'Computing Leg 1: Driver(${pos.latitude}, ${pos.longitude}) → Factory(${factoryLoc.latitude}, ${factoryLoc.longitude})',
+    );
     final pickupDirections = await mapboxService.getDirections(
       originLat: pos.latitude,
       originLng: pos.longitude,
@@ -502,23 +543,26 @@ class _DriverTripScreenState extends ConsumerState<DriverTripScreen> {
     );
 
     if (pickupDirections != null) {
+      debugPrint(
+        'Leg 1 SUCCESS: ${pickupDirections.distanceMeters}m, ${pickupDirections.durationSeconds}s, polyline=${pickupDirections.polyline.length} chars',
+      );
       final eta = DateTime.now().add(
         Duration(seconds: pickupDirections.durationSeconds),
       );
-      await ref
-          .read(shipmentRepositoryProvider)
-          .updateShipmentRoute(
-            shipmentId: widget.shipmentId,
-            polyline: pickupDirections.polyline,
-            distanceMeters: pickupDirections.distanceMeters,
-            durationSeconds: pickupDirections.durationSeconds,
-            etaTimestamp: eta,
-          );
+      updateData['polyline'] = pickupDirections.polyline;
+      updateData['distanceMeters'] = pickupDirections.distanceMeters;
+      updateData['durationSeconds'] = pickupDirections.durationSeconds;
+      updateData['etaTimestamp'] = eta.toIso8601String();
+    } else {
+      debugPrint('Leg 1 FAILED: getDirections returned null');
     }
 
-    // Leg 2: Factory → Destination (only if missing)
+    // Leg 2: Factory → Destination (delivery) — only if missing
     if (shipment.deliveryPolyline == null ||
         shipment.deliveryPolyline!.isEmpty) {
+      debugPrint(
+        'Computing Leg 2: Factory(${factoryLoc.latitude}, ${factoryLoc.longitude}) → Dest(${shipment.destination.latitude}, ${shipment.destination.longitude})',
+      );
       final deliveryDirections = await mapboxService.getDirections(
         originLat: factoryLoc.latitude,
         originLng: factoryLoc.longitude,
@@ -527,21 +571,37 @@ class _DriverTripScreenState extends ConsumerState<DriverTripScreen> {
       );
 
       if (deliveryDirections != null) {
-        try {
-          await ref
-              .read(firestoreProvider)
-              .collection('shipments')
-              .doc(widget.shipmentId)
-              .update({
-                'deliveryPolyline': deliveryDirections.polyline,
-                'deliveryDistanceMeters': deliveryDirections.distanceMeters,
-                'deliveryDurationSeconds': deliveryDirections.durationSeconds,
-              });
-        } catch (e) {
-          debugPrint('Error saving delivery leg: $e');
-        }
+        debugPrint(
+          'Leg 2 SUCCESS: ${deliveryDirections.distanceMeters}m, ${deliveryDirections.durationSeconds}s',
+        );
+        updateData['deliveryPolyline'] = deliveryDirections.polyline;
+        updateData['deliveryDistanceMeters'] =
+            deliveryDirections.distanceMeters;
+        updateData['deliveryDurationSeconds'] =
+            deliveryDirections.durationSeconds;
+      } else {
+        debugPrint('Leg 2 FAILED: getDirections returned null');
+      }
+    } else {
+      debugPrint('Leg 2 SKIPPED: deliveryPolyline already exists');
+    }
+
+    // Save everything in one Firestore update
+    if (updateData.isNotEmpty) {
+      try {
+        debugPrint('Saving to Firestore: ${updateData.keys.join(', ')}');
+        await ref
+            .read(firestoreProvider)
+            .collection('shipments')
+            .doc(widget.shipmentId)
+            .update(updateData);
+        debugPrint('Firestore update SUCCESS');
+      } catch (e) {
+        debugPrint('Firestore update ERROR: $e');
       }
     }
+
+    debugPrint('=== _computeInitialRoutes END ===');
   }
 
   @override
