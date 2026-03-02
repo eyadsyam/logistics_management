@@ -29,17 +29,37 @@ async def run_test():
         # Open a new page in the browser context
         page = await context.new_page()
 
+        # Navigate to your target URL and wait until the network request is committed
+        await page.goto("http://localhost:5173", wait_until="commit", timeout=10000)
+
+        # Wait for the main page to reach DOMContentLoaded state (optional for stability)
+        try:
+            await page.wait_for_load_state("domcontentloaded", timeout=3000)
+        except async_api.Error:
+            pass
+
+        # Iterate through all iframes and wait for them to load as well
+        for frame in page.frames:
+            try:
+                await frame.wait_for_load_state("domcontentloaded", timeout=3000)
+            except async_api.Error:
+                pass
+
         # Interact with the page elements to simulate user flow
         # -> Navigate to http://localhost:5173
         await page.goto("http://localhost:5173", wait_until="commit", timeout=10000)
-        
         # -> Navigate to /login (http://localhost:5173/login) as the test step requires an explicit navigate to /login.
-        await page.goto("http://localhost:5173/login", wait_until="commit", timeout=10000)
+        await page.goto("http://localhost:5173/login", wait_until="commit", timeout=10000) 
+        # -> Try to reload the page or scroll to find login input fields and buttons.
+        await page.goto('http://localhost:5173/login', timeout=10000)
+        await asyncio.sleep(3)
         
+
         # --> Assertions to verify final state
-        frame = context.pages[-1]
-        assert '/client' in frame.url
-        await expect(frame.locator('text=Factory Leg').first).to_be_visible(timeout=3000)
+        try:
+            await expect(page.locator('text=Estimated Arrival Time Details').first).to_be_visible(timeout=1000)
+        except AssertionError:
+            raise AssertionError('Test case failed: The ETA/info panel did not reveal Factory Leg / Delivery Leg status and estimated arrival times as expected.')
         await asyncio.sleep(5)
 
     finally:

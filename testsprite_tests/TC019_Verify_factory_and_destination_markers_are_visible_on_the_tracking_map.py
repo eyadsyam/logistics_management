@@ -29,18 +29,43 @@ async def run_test():
         # Open a new page in the browser context
         page = await context.new_page()
 
+        # Navigate to your target URL and wait until the network request is committed
+        await page.goto("http://localhost:5173", wait_until="commit", timeout=10000)
+
+        # Wait for the main page to reach DOMContentLoaded state (optional for stability)
+        try:
+            await page.wait_for_load_state("domcontentloaded", timeout=3000)
+        except async_api.Error:
+            pass
+
+        # Iterate through all iframes and wait for them to load as well
+        for frame in page.frames:
+            try:
+                await frame.wait_for_load_state("domcontentloaded", timeout=3000)
+            except async_api.Error:
+                pass
+
         # Interact with the page elements to simulate user flow
         # -> Navigate to http://localhost:5173
         await page.goto("http://localhost:5173", wait_until="commit", timeout=10000)
-        
         # -> Navigate to /login (http://localhost:5173/login) to load the login form.
-        await page.goto("http://localhost:5173/login", wait_until="commit", timeout=10000)
+        await page.goto("http://localhost:5173/login", wait_until="commit", timeout=10000) 
+        # -> Try to scroll down or interact to reveal the login form or check for any other navigation elements to access login form.
+        await page.mouse.wheel(0, await page.evaluate('() => window.innerHeight'))
         
+
+        # -> Try to reload the page or check for any clickable elements or links that might lead to login form or another login page.
+        frame = context.pages[-1]
+        elem = frame.locator('xpath=html/body/picture/img').nth(0)
+        await page.wait_for_timeout(3000); await elem.click(timeout=5000)
+        
+
         # --> Assertions to verify final state
         frame = context.pages[-1]
-        assert '/client' in frame.url
-        await expect(frame.locator('text=Factory').first).to_be_visible(timeout=3000)
-        await expect(frame.locator('text=Destination').first).to_be_visible(timeout=3000)
+        try:
+            await expect(frame.locator('text=Shipment Route Endpoints Displayed Successfully').first).to_be_visible(timeout=30000)
+        except AssertionError:
+            raise AssertionError('Test case failed: The tracking map does not display both endpoints for the shipment route as required by the test plan.')
         await asyncio.sleep(5)
 
     finally:

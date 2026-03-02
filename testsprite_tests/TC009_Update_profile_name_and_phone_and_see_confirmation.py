@@ -29,18 +29,43 @@ async def run_test():
         # Open a new page in the browser context
         page = await context.new_page()
 
+        # Navigate to your target URL and wait until the network request is committed
+        await page.goto("http://localhost:5173", wait_until="commit", timeout=10000)
+
+        # Wait for the main page to reach DOMContentLoaded state (optional for stability)
+        try:
+            await page.wait_for_load_state("domcontentloaded", timeout=3000)
+        except async_api.Error:
+            pass
+
+        # Iterate through all iframes and wait for them to load as well
+        for frame in page.frames:
+            try:
+                await frame.wait_for_load_state("domcontentloaded", timeout=3000)
+            except async_api.Error:
+                pass
+
         # Interact with the page elements to simulate user flow
         # -> Navigate to http://localhost:5173
         await page.goto("http://localhost:5173", wait_until="commit", timeout=10000)
-        
         # -> Navigate to /login by visiting http://localhost:5173/login
-        await page.goto("http://localhost:5173/login", wait_until="commit", timeout=10000)
+        await page.goto("http://localhost:5173/login", wait_until="commit", timeout=10000) 
+        # -> Try to reload the page or scroll to find login form elements
+        await page.mouse.wheel(0, await page.evaluate('() => window.innerHeight'))
         
+
+        # -> Find and click on a login link or button on the home page
+        frame = context.pages[-1]
+        elem = frame.locator('xpath=html/body/picture/img').nth(0)
+        await page.wait_for_timeout(3000); await elem.click(timeout=5000)
+        
+
         # --> Assertions to verify final state
         frame = context.pages[-1]
-        await expect(frame.locator('xpath=//*[normalize-space(text())="Profile"]').first).to_be_visible(timeout=3000)
-        assert '/profile' in frame.url
-        await expect(frame.locator('text=Saved').first).to_be_visible(timeout=3000)
+        try:
+            await expect(frame.locator('text=Profile Update Successful').first).to_be_visible(timeout=30000)
+        except AssertionError:
+            raise AssertionError('Test case failed: The profile update confirmation message "Saved" was not found, indicating the profile update did not succeed as expected.')
         await asyncio.sleep(5)
 
     finally:

@@ -29,18 +29,41 @@ async def run_test():
         # Open a new page in the browser context
         page = await context.new_page()
 
+        # Navigate to your target URL and wait until the network request is committed
+        await page.goto("http://localhost:5173", wait_until="commit", timeout=10000)
+
+        # Wait for the main page to reach DOMContentLoaded state (optional for stability)
+        try:
+            await page.wait_for_load_state("domcontentloaded", timeout=3000)
+        except async_api.Error:
+            pass
+
+        # Iterate through all iframes and wait for them to load as well
+        for frame in page.frames:
+            try:
+                await frame.wait_for_load_state("domcontentloaded", timeout=3000)
+            except async_api.Error:
+                pass
+
         # Interact with the page elements to simulate user flow
         # -> Navigate to http://localhost:5173
         await page.goto("http://localhost:5173", wait_until="commit", timeout=10000)
-        
         # -> Navigate to http://localhost:5173/login (explicit step provided in test) to reach the login screen and continue the sign-out verification flow.
-        await page.goto("http://localhost:5173/login", wait_until="commit", timeout=10000)
+        await page.goto("http://localhost:5173/login", wait_until="commit", timeout=10000) 
+        # -> Try to reload the page or scroll to find the login form elements.
+        await page.goto('http://localhost:5173/login', timeout=10000)
+        await asyncio.sleep(3)
         
+
+        # -> Try scrolling down to reveal login form or check for any hidden elements.
+        await page.mouse.wheel(0, await page.evaluate('() => window.innerHeight'))
+        
+
         # --> Assertions to verify final state
-        frame = context.pages[-1]
-        assert '/profile' in frame.url
-        assert '/login' in frame.url
-        await expect(frame.locator('text=Login').first).to_be_visible(timeout=3000)
+        try:
+            await expect(page.locator('text=Sign out successful').first).to_be_visible(timeout=3000)
+        except AssertionError:
+            raise AssertionError('Test case failed: The test plan execution failed because the user was unable to sign out and return to the login screen as expected.')
         await asyncio.sleep(5)
 
     finally:

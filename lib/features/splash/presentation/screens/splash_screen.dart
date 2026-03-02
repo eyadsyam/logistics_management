@@ -55,8 +55,9 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     if (!mounted) return;
 
     // ── 2. Location permissions (best-effort, don't crash) ──
+    bool hasPermission = false;
     try {
-      await locService.checkPermissions().timeout(
+      hasPermission = await locService.checkPermissions().timeout(
         const Duration(seconds: 3),
         onTimeout: () => false, // fallback boolean so we don't throw
       );
@@ -64,16 +65,18 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     if (!mounted) return;
 
     // ── 3. Warm up GPS (best-effort) ──
-    try {
-      await Geolocator.getCurrentPosition(
-        locationSettings: const LocationSettings(
-          accuracy: LocationAccuracy.high,
-        ),
-      ).timeout(
-        const Duration(seconds: 3),
-        onTimeout: () => throw TimeoutException('Geolocator warmup timeout'),
-      );
-    } catch (_) {}
+    if (hasPermission) {
+      try {
+        await Geolocator.getCurrentPosition(
+          locationSettings: const LocationSettings(
+            accuracy: LocationAccuracy.high,
+          ),
+        ).timeout(
+          const Duration(seconds: 3),
+          onTimeout: () => throw TimeoutException('Geolocator warmup timeout'),
+        );
+      } catch (_) {}
+    }
 
     // ── 4. Signal completion — GoRouter redirect will navigate ──
     // Use the cached notifier instead of 'ref' to avoid using BuildContext

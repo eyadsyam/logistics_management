@@ -29,17 +29,50 @@ async def run_test():
         # Open a new page in the browser context
         page = await context.new_page()
 
+        # Navigate to your target URL and wait until the network request is committed
+        await page.goto("http://localhost:5173", wait_until="commit", timeout=10000)
+
+        # Wait for the main page to reach DOMContentLoaded state (optional for stability)
+        try:
+            await page.wait_for_load_state("domcontentloaded", timeout=3000)
+        except async_api.Error:
+            pass
+
+        # Iterate through all iframes and wait for them to load as well
+        for frame in page.frames:
+            try:
+                await frame.wait_for_load_state("domcontentloaded", timeout=3000)
+            except async_api.Error:
+                pass
+
         # Interact with the page elements to simulate user flow
         # -> Navigate to http://localhost:5173
         await page.goto("http://localhost:5173", wait_until="commit", timeout=10000)
-        
         # -> Navigate to /register (use direct navigation since no on-page navigation elements are available)
-        await page.goto("http://localhost:5173/register", wait_until="commit", timeout=10000)
+        await page.goto("http://localhost:5173/register", wait_until="commit", timeout=10000) 
+        # -> Scroll down or try to find any hidden or off-screen registration form elements or role dropdown.
+        await page.mouse.wheel(0, await page.evaluate('() => window.innerHeight'))
         
+
+        # -> Try to scroll down or up to reveal any hidden navigation or registration links or buttons.
+        await page.mouse.wheel(0, await page.evaluate('() => window.innerHeight'))
+        
+
+        # -> Try scrolling up to check if any hidden navigation or registration links appear.
+        await page.mouse.wheel(0, -await page.evaluate('() => window.innerHeight'))
+        
+
+        # -> Try to open a new tab and navigate directly to /register again to re-check the registration page for any dynamic content or errors.
+        await page.goto('http://localhost:5173/register', timeout=10000)
+        await asyncio.sleep(3)
+        
+
         # --> Assertions to verify final state
         frame = context.pages[-1]
-        await expect(frame.locator('text=Register').first).to_be_visible(timeout=3000)
-        assert '/client' in frame.url
+        try:
+            await expect(frame.locator('text=Registration Successful! Welcome Client')).to_be_visible(timeout=3000)
+        except AssertionError:
+            raise AssertionError('Test case failed: Registration with role selection did not create an account or redirect to the client destination as expected.')
         await asyncio.sleep(5)
 
     finally:

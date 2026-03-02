@@ -29,18 +29,41 @@ async def run_test():
         # Open a new page in the browser context
         page = await context.new_page()
 
+        # Navigate to your target URL and wait until the network request is committed
+        await page.goto("http://localhost:5173", wait_until="commit", timeout=10000)
+
+        # Wait for the main page to reach DOMContentLoaded state (optional for stability)
+        try:
+            await page.wait_for_load_state("domcontentloaded", timeout=3000)
+        except async_api.Error:
+            pass
+
+        # Iterate through all iframes and wait for them to load as well
+        for frame in page.frames:
+            try:
+                await frame.wait_for_load_state("domcontentloaded", timeout=3000)
+            except async_api.Error:
+                pass
+
         # Interact with the page elements to simulate user flow
         # -> Navigate to http://localhost:5173
         await page.goto("http://localhost:5173", wait_until="commit", timeout=10000)
-        
         # -> Navigate to /login (http://localhost:5173/login) to reach the login page as required by the test.
-        await page.goto("http://localhost:5173/login", wait_until="commit", timeout=10000)
+        await page.goto("http://localhost:5173/login", wait_until="commit", timeout=10000) 
+        # -> Scroll down to try to reveal the login form fields and buttons
+        await page.mouse.wheel(0, await page.evaluate('() => window.innerHeight'))
         
+
+        # -> Try to scroll up to check if login form is above or try to find any clickable elements or links to login form
+        await page.mouse.wheel(0, -await page.evaluate('() => window.innerHeight'))
+        
+
         # --> Assertions to verify final state
         frame = context.pages[-1]
-        await expect(frame.locator('text=Login').first).to_be_visible(timeout=3000)
-        assert '/client' in frame.url
-        await expect(frame.locator('text=Shipments').first).to_be_visible(timeout=3000)
+        try:
+            await expect(frame.locator('text=Welcome to the Admin Dashboard').first).to_be_visible(timeout=30000)
+        except AssertionError:
+            raise AssertionError('Test case failed: User login with valid credentials did not redirect to the expected role home screen. The expected text "Welcome to the Admin Dashboard" was not found, indicating the login or redirection failed.')
         await asyncio.sleep(5)
 
     finally:

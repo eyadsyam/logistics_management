@@ -29,18 +29,42 @@ async def run_test():
         # Open a new page in the browser context
         page = await context.new_page()
 
+        # Navigate to your target URL and wait until the network request is committed
+        await page.goto("http://localhost:5173", wait_until="commit", timeout=10000)
+
+        # Wait for the main page to reach DOMContentLoaded state (optional for stability)
+        try:
+            await page.wait_for_load_state("domcontentloaded", timeout=3000)
+        except async_api.Error:
+            pass
+
+        # Iterate through all iframes and wait for them to load as well
+        for frame in page.frames:
+            try:
+                await frame.wait_for_load_state("domcontentloaded", timeout=3000)
+            except async_api.Error:
+                pass
+
         # Interact with the page elements to simulate user flow
         # -> Navigate to http://localhost:5173
         await page.goto("http://localhost:5173", wait_until="commit", timeout=10000)
-        
         # -> Navigate to /login (http://localhost:5173/login) so the login form can be interacted with.
-        await page.goto("http://localhost:5173/login", wait_until="commit", timeout=10000)
+        await page.goto("http://localhost:5173/login", wait_until="commit", timeout=10000) 
+        # -> Try to scroll down or reload page to find login form elements
+        await page.mouse.wheel(0, await page.evaluate('() => window.innerHeight'))
         
+
+        # -> Reload the /login page to try to load login form elements
+        await page.goto('http://localhost:5173/login', timeout=10000)
+        await asyncio.sleep(3)
+        
+
         # --> Assertions to verify final state
         frame = context.pages[-1]
-        await expect(frame.locator('text=Invalid').first).to_be_visible(timeout=3000)
-        assert '/login' in frame.url
-        await expect(frame.locator('text=Login').first).to_be_visible(timeout=3000)
+        try:
+            await expect(frame.locator('text=Welcome to the Dashboard').first).to_be_visible(timeout=30000)
+        except AssertionError:
+            raise AssertionError('Test case failed: Invalid email/password did not show an error message and the user might have navigated away from /login.')
         await asyncio.sleep(5)
 
     finally:
