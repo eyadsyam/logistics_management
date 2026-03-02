@@ -46,10 +46,12 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
   Future<void> _initializeApp() async {
     // 1. Minimum splash time for branding
     await Future.delayed(const Duration(seconds: 2));
+    if (!mounted) return;
 
     // 2. Request core permissions (Location)
     final locService = ref.read(locationServiceProvider);
     await locService.checkPermissions();
+    if (!mounted) return;
 
     // Optionally trigger a first location fetch to jump-start GPS
     try {
@@ -59,9 +61,9 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
         ),
       );
     } catch (_) {}
+    if (!mounted) return;
 
     // 3. Process Authentication State and Redirect
-    if (!mounted) return;
     final currentUser = ref.read(currentUserProvider);
     final router = GoRouter.of(context);
 
