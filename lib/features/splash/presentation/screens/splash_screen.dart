@@ -44,39 +44,48 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
   }
 
   Future<void> _initializeApp() async {
-    // 1. Minimum splash time for branding
-    await Future.delayed(const Duration(seconds: 2));
-    if (!mounted) return;
-
-    // 2. Request core permissions (Location)
-    final locService = ref.read(locationServiceProvider);
-    await locService.checkPermissions();
-    if (!mounted) return;
-
-    // Optionally trigger a first location fetch to jump-start GPS
     try {
-      await Geolocator.getCurrentPosition(
-        locationSettings: const LocationSettings(
-          accuracy: LocationAccuracy.high,
-        ),
-      );
-    } catch (_) {}
-    if (!mounted) return;
+      // 1. Minimum splash time for branding
+      await Future.delayed(const Duration(seconds: 2));
+      if (!mounted) return;
 
-    // 3. Process Authentication State and Redirect
-    final currentUser = ref.read(currentUserProvider);
-    final router = GoRouter.of(context);
+      // 2. Request core permissions (Location)
+      try {
+        final locService = ref.read(locationServiceProvider);
+        await locService.checkPermissions();
+      } catch (_) {}
+      if (!mounted) return;
 
-    if (currentUser != null) {
-      if (currentUser.role == AppConstants.roleClient) {
-        router.go('/client');
-      } else if (currentUser.role == AppConstants.roleDriver) {
-        router.go('/driver');
+      // Optionally trigger a first location fetch to jump-start GPS
+      try {
+        await Geolocator.getCurrentPosition(
+          locationSettings: const LocationSettings(
+            accuracy: LocationAccuracy.high,
+          ),
+        );
+      } catch (_) {}
+      if (!mounted) return;
+
+      // 3. Process Authentication State and Redirect
+      final currentUser = ref.read(currentUserProvider);
+      final router = GoRouter.of(context);
+
+      if (currentUser != null) {
+        if (currentUser.role == AppConstants.roleClient) {
+          router.go('/client');
+        } else if (currentUser.role == AppConstants.roleDriver) {
+          router.go('/driver');
+        } else {
+          router.go('/admin');
+        }
       } else {
-        router.go('/admin');
+        router.go('/login');
       }
-    } else {
-      router.go('/login');
+    } catch (e) {
+      debugPrint('SplashScreen initialization error: $e');
+      if (mounted) {
+        GoRouter.of(context).go('/login');
+      }
     }
   }
 

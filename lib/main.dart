@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:ui';
 
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
@@ -16,45 +17,64 @@ import 'features/auth/presentation/state/auth_state.dart';
 
 /// Application entry point.
 /// Initializes Firebase, Hive, Mapbox, and environment variables.
+/// Wraps everything in global error handlers so no crash goes unhandled.
 Future<void> main() async {
-  WidgetsFlutterBinding.ensureInitialized();
+  // ── Zone-level guard: catches ALL uncaught async exceptions ──
+  runZonedGuarded(
+    () async {
+      WidgetsFlutterBinding.ensureInitialized();
 
-  // Load environment variables
-  await dotenv.load(fileName: '.env');
+      // ── Flutter framework errors (widget tree, rendering, etc.) ──
+      FlutterError.onError = (FlutterErrorDetails details) {
+        debugPrint('[EDITA ERROR] FlutterError: ${details.exception}');
+        debugPrint('[EDITA ERROR] Stack: ${details.stack}');
+        // Don't call FlutterError.presentError in release — just log it
+      };
 
-  // Initialize Firebase
-  await Firebase.initializeApp();
+      // ── Platform-level errors (native plugin crashes, etc.) ──
+      PlatformDispatcher.instance.onError = (error, stack) {
+        debugPrint('[EDITA ERROR] PlatformError: $error');
+        debugPrint('[EDITA ERROR] Stack: $stack');
+        return true; // Handled — don't terminate the app
+      };
 
-  // Initialize Hive for local caching (dead zone handling)
-  await Hive.initFlutter();
+      // Load environment variables
+      await dotenv.load(fileName: '.env');
 
-  // Set Mapbox access token
-  final mapboxToken = dotenv.env['MAPBOX_ACCESS_TOKEN']?.trim() ?? '';
-  MapboxOptions.setAccessToken(mapboxToken);
+      // Initialize Firebase
+      await Firebase.initializeApp();
 
-  // System UI configuration for light theme
-  SystemChrome.setSystemUIOverlayStyle(
-    const SystemUiOverlayStyle(
-      statusBarColor: Colors.transparent,
-      statusBarIconBrightness: Brightness.dark,
-      systemNavigationBarColor: Colors.white,
-      systemNavigationBarIconBrightness: Brightness.dark,
-    ),
+      // Initialize Hive for local caching (dead zone handling)
+      await Hive.initFlutter();
+
+      // Set Mapbox access token
+      final mapboxToken = dotenv.env['MAPBOX_ACCESS_TOKEN']?.trim() ?? '';
+      MapboxOptions.setAccessToken(mapboxToken);
+
+      // System UI configuration for light theme
+      SystemChrome.setSystemUIOverlayStyle(
+        const SystemUiOverlayStyle(
+          statusBarColor: Colors.transparent,
+          statusBarIconBrightness: Brightness.dark,
+          systemNavigationBarColor: Colors.white,
+          systemNavigationBarIconBrightness: Brightness.dark,
+        ),
+      );
+
+      // Preferred orientations
+      await SystemChrome.setPreferredOrientations([
+        DeviceOrientation.portraitUp,
+        DeviceOrientation.portraitDown,
+      ]);
+
+      runApp(const ProviderScope(child: EditaFleetApp()));
+    },
+    (error, stackTrace) {
+      // ── Catches any uncaught async errors in the entire app ──
+      debugPrint('[EDITA ERROR] Uncaught: $error');
+      debugPrint('[EDITA ERROR] Stack: $stackTrace');
+    },
   );
-
-  // Preferred orientations
-  await SystemChrome.setPreferredOrientations([
-    DeviceOrientation.portraitUp,
-    DeviceOrientation.portraitDown,
-  ]);
-
-  // Global error handler
-  FlutterError.onError = (details) {
-    FlutterError.presentError(details);
-    debugPrint('[EDITA] FlutterError: ${details.exception}');
-  };
-
-  runApp(const ProviderScope(child: EditaFleetApp()));
 }
 
 /// Root application widget.
