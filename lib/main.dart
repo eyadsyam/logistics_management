@@ -105,6 +105,18 @@ class EditaFleetApp extends ConsumerWidget {
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       routerConfig: router,
+      // Lock text scaling so system font size doesn't break layouts
+      builder: (context, child) {
+        final mediaQuery = MediaQuery.of(context);
+        final clampedScaler = mediaQuery.textScaler.clamp(
+          minScaleFactor: 0.85,
+          maxScaleFactor: 1.1,
+        );
+        return MediaQuery(
+          data: mediaQuery.copyWith(textScaler: clampedScaler),
+          child: child ?? const SizedBox.shrink(),
+        );
+      },
     );
   }
 }

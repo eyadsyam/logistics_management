@@ -140,7 +140,7 @@ class _ShipmentTrackingScreenState
 
       await _poiPointManager!.createMulti([factoryMarker, destMarker]);
 
-      // ── Pickup leg polyline (driver → factory) — ORANGE ──
+      // ── Pickup leg polyline (driver → factory) — BLUE ──
       if (isPickupPhase &&
           shipment.polyline != null &&
           shipment.polyline!.isNotEmpty) {
@@ -149,7 +149,7 @@ class _ShipmentTrackingScreenState
           await _polylineManager!.create(
             PolylineAnnotationOptions(
               geometry: LineString(coordinates: pickupPts),
-              lineColor: AppColors.accent.toARGB32(),
+              lineColor: AppColors.info.toARGB32(),
               lineWidth: 5.0,
               lineJoin: LineJoin.ROUND,
             ),
@@ -157,7 +157,7 @@ class _ShipmentTrackingScreenState
         }
       }
 
-      // ── Delivery leg polyline (factory → destination) — BLUE ──
+      // ── Delivery leg polyline (factory → destination) — ORANGE ──
       if (shipment.deliveryPolyline != null &&
           shipment.deliveryPolyline!.isNotEmpty) {
         final deliveryPts = _decodePolyline(
@@ -168,7 +168,7 @@ class _ShipmentTrackingScreenState
           await _polylineManager!.create(
             PolylineAnnotationOptions(
               geometry: LineString(coordinates: deliveryPts),
-              lineColor: AppColors.info.toARGB32(),
+              lineColor: AppColors.accent.toARGB32(),
               lineWidth: isPickupPhase ? 3.5 : 5.0,
               lineJoin: LineJoin.ROUND,
             ),
@@ -187,7 +187,7 @@ class _ShipmentTrackingScreenState
           await _polylineManager!.create(
             PolylineAnnotationOptions(
               geometry: LineString(coordinates: pts),
-              lineColor: AppColors.info.toARGB32(),
+              lineColor: AppColors.accent.toARGB32(),
               lineWidth: 5.0,
               lineJoin: LineJoin.ROUND,
             ),

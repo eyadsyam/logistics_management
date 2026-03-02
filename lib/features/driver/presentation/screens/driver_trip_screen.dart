@@ -320,15 +320,14 @@ class _DriverTripScreenState extends ConsumerState<DriverTripScreen> {
         'deliveryPolyline: ${shipment.deliveryPolyline?.length ?? 0} chars',
       );
 
-      // ── Generate labeled marker images ──
       final factoryIconBytes = await MapMarkerUtil.getLabeledMarkerBytes(
         label: 'Factory ${shipment.factoryId ?? 'Edita'}',
-        color: AppColors.accent,
+        color: AppColors.info,
         size: 180,
       );
       final destIconBytes = await MapMarkerUtil.getLabeledMarkerBytes(
         label: 'Delivery',
-        color: AppColors.primary,
+        color: AppColors.accent,
         size: 180,
       );
 
@@ -355,7 +354,7 @@ class _DriverTripScreenState extends ConsumerState<DriverTripScreen> {
 
       await _poiPointManager!.createMulti([factoryMarker, destMarker]);
 
-      // ── Draw pickup leg (driver → factory) — ORANGE ──
+      // ── Draw pickup leg (driver → factory) — BLUE ──
       if (isPickupPhase &&
           shipment.polyline != null &&
           shipment.polyline!.isNotEmpty) {
@@ -364,7 +363,7 @@ class _DriverTripScreenState extends ConsumerState<DriverTripScreen> {
           await _polylineManager!.create(
             PolylineAnnotationOptions(
               geometry: LineString(coordinates: pickupPoints),
-              lineColor: AppColors.accent.toARGB32(),
+              lineColor: AppColors.info.toARGB32(),
               lineWidth: 6.0,
               lineJoin: LineJoin.ROUND,
             ),
@@ -372,7 +371,7 @@ class _DriverTripScreenState extends ConsumerState<DriverTripScreen> {
         }
       }
 
-      // ── Draw delivery leg (factory → destination) — BLUE/PRIMARY ──
+      // ── Draw delivery leg (factory → destination) — ORANGE ──
       if (shipment.deliveryPolyline != null &&
           shipment.deliveryPolyline!.isNotEmpty) {
         final deliveryPoints = _decodePolyline(
@@ -383,7 +382,7 @@ class _DriverTripScreenState extends ConsumerState<DriverTripScreen> {
           await _polylineManager!.create(
             PolylineAnnotationOptions(
               geometry: LineString(coordinates: deliveryPoints),
-              lineColor: AppColors.primary.toARGB32(),
+              lineColor: AppColors.accent.toARGB32(),
               lineWidth: isPickupPhase ? 4.0 : 6.0,
               lineJoin: LineJoin.ROUND,
             ),
@@ -402,7 +401,7 @@ class _DriverTripScreenState extends ConsumerState<DriverTripScreen> {
           await _polylineManager!.create(
             PolylineAnnotationOptions(
               geometry: LineString(coordinates: pts),
-              lineColor: AppColors.primary.toARGB32(),
+              lineColor: AppColors.accent.toARGB32(),
               lineWidth: 6.0,
               lineJoin: LineJoin.ROUND,
             ),
@@ -427,7 +426,7 @@ class _DriverTripScreenState extends ConsumerState<DriverTripScreen> {
                 ),
               ],
             ),
-            lineColor: AppColors.primary.toARGB32(),
+            lineColor: AppColors.accent.toARGB32(),
             lineWidth: 4.0,
             lineJoin: LineJoin.ROUND,
           ),
@@ -803,8 +802,8 @@ class _DriverTripScreenState extends ConsumerState<DriverTripScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
               color: isPickupPhase
-                  ? AppColors.accent.withValues(alpha: 0.1)
-                  : AppColors.primary.withValues(alpha: 0.1),
+                  ? AppColors.info.withValues(alpha: 0.1)
+                  : AppColors.accent.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(20),
             ),
             child: Row(
@@ -815,7 +814,7 @@ class _DriverTripScreenState extends ConsumerState<DriverTripScreen> {
                       ? Icons.factory_rounded
                       : Icons.local_shipping_rounded,
                   size: 16,
-                  color: isPickupPhase ? AppColors.accent : AppColors.primary,
+                  color: isPickupPhase ? AppColors.info : AppColors.accent,
                 ),
                 const SizedBox(width: 6),
                 Text(
@@ -826,7 +825,7 @@ class _DriverTripScreenState extends ConsumerState<DriverTripScreen> {
                     fontSize: 11,
                     fontWeight: FontWeight.w800,
                     letterSpacing: 1,
-                    color: isPickupPhase ? AppColors.accent : AppColors.primary,
+                    color: isPickupPhase ? AppColors.info : AppColors.accent,
                   ),
                 ),
               ],
@@ -842,12 +841,12 @@ class _DriverTripScreenState extends ConsumerState<DriverTripScreen> {
                 width: 32,
                 height: 32,
                 decoration: BoxDecoration(
-                  color: AppColors.accent.withValues(alpha: 0.15),
+                  color: AppColors.info.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: const Icon(
                   Icons.factory_rounded,
-                  color: AppColors.accent,
+                  color: AppColors.info,
                   size: 18,
                 ),
               ),
@@ -861,7 +860,7 @@ class _DriverTripScreenState extends ConsumerState<DriverTripScreen> {
                       style: const TextStyle(
                         fontSize: 10,
                         fontWeight: FontWeight.w700,
-                        color: AppColors.accent,
+                        color: AppColors.info,
                         letterSpacing: 0.5,
                       ),
                     ),
@@ -897,12 +896,12 @@ class _DriverTripScreenState extends ConsumerState<DriverTripScreen> {
                 width: 32,
                 height: 32,
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.15),
+                  color: AppColors.accent.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: const Icon(
                   Icons.location_on_rounded,
-                  color: AppColors.primary,
+                  color: AppColors.accent,
                   size: 18,
                 ),
               ),
@@ -916,7 +915,7 @@ class _DriverTripScreenState extends ConsumerState<DriverTripScreen> {
                       style: TextStyle(
                         fontSize: 10,
                         fontWeight: FontWeight.w700,
-                        color: AppColors.primary,
+                        color: AppColors.accent,
                         letterSpacing: 0.5,
                       ),
                     ),
@@ -948,7 +947,7 @@ class _DriverTripScreenState extends ConsumerState<DriverTripScreen> {
                     'Pickup',
                     '${(shipment.distanceMeters / 1000).toStringAsFixed(1)} km',
                     '${(shipment.durationSeconds / 60).round()} min',
-                    AppColors.accent,
+                    AppColors.info,
                   ),
                 // Delivery leg info
                 if (shipment.deliveryDistanceMeters > 0)
@@ -956,7 +955,7 @@ class _DriverTripScreenState extends ConsumerState<DriverTripScreen> {
                     'Delivery',
                     '${(shipment.deliveryDistanceMeters / 1000).toStringAsFixed(1)} km',
                     '${(shipment.deliveryDurationSeconds / 60).round()} min',
-                    AppColors.primary,
+                    AppColors.accent,
                   ),
               ],
             ),
@@ -1211,7 +1210,7 @@ class _DriverTripScreenState extends ConsumerState<DriverTripScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
             decoration: BoxDecoration(
               color: isPickupPhase
-                  ? AppColors.accent.withValues(alpha: 0.1)
+                  ? AppColors.info.withValues(alpha: 0.1)
                   : AppColors.success.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(20),
             ),
@@ -1223,7 +1222,7 @@ class _DriverTripScreenState extends ConsumerState<DriverTripScreen> {
                 fontSize: 11,
                 fontWeight: FontWeight.w800,
                 letterSpacing: 1,
-                color: isPickupPhase ? AppColors.accent : AppColors.success,
+                color: isPickupPhase ? AppColors.info : AppColors.success,
               ),
             ),
           ),
