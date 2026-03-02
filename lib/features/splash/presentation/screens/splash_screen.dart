@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
@@ -55,7 +56,10 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
 
     // ── 2. Location permissions (best-effort, don't crash) ──
     try {
-      await locService.checkPermissions();
+      await locService.checkPermissions().timeout(
+        const Duration(seconds: 3),
+        onTimeout: () => false, // fallback boolean so we don't throw
+      );
     } catch (_) {}
     if (!mounted) return;
 
@@ -65,6 +69,9 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
         locationSettings: const LocationSettings(
           accuracy: LocationAccuracy.high,
         ),
+      ).timeout(
+        const Duration(seconds: 3),
+        onTimeout: () => throw TimeoutException('Geolocator warmup timeout'),
       );
     } catch (_) {}
 

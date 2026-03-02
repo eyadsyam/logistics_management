@@ -289,6 +289,43 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       ),
               ),
             ),
+            const SizedBox(height: 16),
+
+            // ── Temporary AI Testing Phase ──
+            // Allows TestSprite to quickly bypass typing and authenticate
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () {
+                      _emailController.text = 'client@test.com';
+                      _passwordController.text = '123456';
+                      _handleLogin();
+                    },
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: AppColors.info,
+                      side: const BorderSide(color: AppColors.info),
+                    ),
+                    child: const Text('AI Client Test'),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () {
+                      _emailController.text = 'driver@test.com';
+                      _passwordController.text = '123456';
+                      _handleLogin();
+                    },
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: AppColors.accent,
+                      side: const BorderSide(color: AppColors.accent),
+                    ),
+                    child: const Text('AI Driver Test'),
+                  ),
+                ),
+              ],
+            ),
           ],
         ),
       ),

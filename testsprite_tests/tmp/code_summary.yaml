@@ -1,0 +1,144 @@
+version: "2"
+type: frontend
+tech_stack:
+  - Dart
+  - Flutter
+  - Flutter Material
+  - go_router, riverpod, freezed, firebase_auth, cloud_firestore, mapbox_maps_flutter
+routes:
+  - path: /splash
+    file: lib/features/splash/presentation/screens/splash_screen.dart
+    auth_required: false
+    description: Splash screen that initializes location, permissions, and routing.
+  - path: /login
+    file: lib/features/auth/presentation/screens/login_screen.dart
+    auth_required: false
+    description: User login screen with email/password and role-based redirect.
+  - path: /register
+    file: lib/features/auth/presentation/screens/register_screen.dart
+    auth_required: false
+    description: User registration screen for client, driver, and admin roles.
+  - path: /client
+    file: lib/features/client/presentation/screens/client_home_screen.dart
+    auth_required: true
+    description: Client dashboard listing shipments, stats, and quick actions.
+  - path: /client/tracking/:shipmentId
+    file: lib/features/client/presentation/screens/shipment_tracking_screen.dart
+    auth_required: true
+    description: Client real-time shipment tracking map.
+  - path: /driver
+    file: lib/features/driver/presentation/screens/driver_home_screen.dart
+    auth_required: true
+    description: Driver home screen showing assigned and available shipments.
+  - path: /driver/trip/:shipmentId
+    file: lib/features/driver/presentation/screens/driver_trip_screen.dart
+    auth_required: true
+    description: Driver trip screen with live route, stats, and actions.
+  - path: /admin
+    file: lib/features/admin/presentation/screens/admin_dashboard_screen.dart
+    auth_required: true
+    description: Admin dashboard with fleet, shipments, and driver overview.
+  - path: /profile
+    file: lib/features/auth/presentation/screens/profile_screen.dart
+    auth_required: true
+    description: User profile management screen.
+features:
+  - name: Authentication & Roles
+    description: Email/password authentication with Firebase Auth, Firestore-backed user profiles, and role-based routing for client, driver, and admin.
+    files:
+      - lib/features/auth/presentation/screens/login_screen.dart
+      - lib/features/auth/presentation/screens/register_screen.dart
+      - lib/features/auth/presentation/screens/profile_screen.dart
+      - lib/features/auth/data/repositories/auth_repository_impl.dart
+      - lib/features/auth/domain/usecases/sign_in_usecase.dart
+      - lib/features/auth/domain/usecases/sign_up_usecase.dart
+      - lib/features/auth/domain/usecases/sign_out_usecase.dart
+    entry_route: /login
+    user_interactions:
+      - Fill email and password fields and submit the login form.
+      - Choose a user role when registering a new account.
+      - Update profile details such as name, phone, and avatar.
+      - Sign out from the profile menu or overflow actions.
+    api_calls:
+      - method: FirebaseAuth
+        endpoint: signInWithEmailAndPassword
+      - method: FirebaseAuth
+        endpoint: createUserWithEmailAndPassword
+      - method: Firestore
+        endpoint: users collection CRUD
+    auth_required: false
+  - name: Client Shipment Management
+    description: Client can create, search, sort, and manage shipments with pricing, priority, and history views.
+    files:
+      - lib/features/client/presentation/screens/client_home_screen.dart
+      - lib/features/client/presentation/screens/create_shipment_screen.dart
+      - lib/features/client/presentation/screens/client_history_screen.dart
+      - lib/features/client/presentation/screens/shipment_tracking_screen.dart
+      - lib/features/shipment/data/repositories/shipment_repository_impl.dart
+      - lib/features/shipment/domain/usecases/create_shipment_usecase.dart
+    entry_route: /client
+    user_interactions:
+      - Open the client dashboard to view active and completed shipments.
+      - Search and sort shipments by date, distance, and price.
+      - Tap "New Shipment" and complete the multi-step create shipment flow.
+      - Clear completed shipments to move them into history.
+      - Open shipment tracking to view the live map and driver status.
+    api_calls:
+      - method: Firestore
+        endpoint: shipments collection streaming and updates
+      - method: Mapbox
+        endpoint: forwardGeocode and getDirections
+    auth_required: true
+  - name: Driver Trip Management
+    description: Drivers see assigned shipments, start trips, and stream live location for pickup and delivery legs.
+    files:
+      - lib/features/driver/presentation/screens/driver_home_screen.dart
+      - lib/features/driver/presentation/screens/driver_trip_screen.dart
+      - lib/features/driver/data/repositories/driver_repository_impl.dart
+      - lib/features/shipment/data/repositories/shipment_repository_impl.dart
+    entry_route: /driver
+    user_interactions:
+      - Open the driver home screen to view assigned shipments.
+      - Start a trip for a selected shipment and follow the map route.
+      - Update shipment status through pickup, in progress, and completed phases.
+      - Share live location which updates the client tracking screen.
+    api_calls:
+      - method: Firestore
+        endpoint: drivers collection and shipment status updates
+      - method: Mapbox
+        endpoint: getDirections for driver routes
+    auth_required: true
+  - name: Admin Fleet Dashboard
+    description: Admins monitor active shipments and online drivers with summary stats and detailed lists.
+    files:
+      - lib/features/admin/presentation/screens/admin_dashboard_screen.dart
+      - lib/features/driver/data/repositories/driver_repository_impl.dart
+      - lib/features/shipment/data/repositories/shipment_repository_impl.dart
+    entry_route: /admin
+    user_interactions:
+      - View global stats for pending and in-transit shipments and active drivers.
+      - Browse live shipments with origin, destination, and status.
+      - Browse online drivers with availability and contact details.
+      - Sign out from the admin dashboard.
+    api_calls:
+      - method: Firestore
+        endpoint: aggregated reads from shipments and drivers collections
+    auth_required: true
+  - name: Real-time Shipment Tracking
+    description: Real-time map-based tracking of shipments for clients with factory and destination markers, polylines, and ETA.
+    files:
+      - lib/features/client/presentation/screens/shipment_tracking_screen.dart
+      - lib/features/map/data/services/mapbox_service.dart
+      - lib/core/utils/map_marker_util.dart
+    entry_route: /client/tracking/:shipmentId
+    user_interactions:
+      - Open tracking from a shipment card in the client dashboard.
+      - View factory, destination, and driver markers on the map.
+      - Read ETA, distance, and phase-aware status information.
+    api_calls:
+      - method: Firestore
+        endpoint: shipment location history and status streams
+      - method: Mapbox
+        endpoint: getDirections and map tile loading
+    auth_required: true
+known_limitations: []

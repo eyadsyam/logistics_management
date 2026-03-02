@@ -1,0 +1,1548 @@
+[
+  {
+    "id": "TC001",
+    "title": "Splash displays branding while initialization is in progress",
+    "description": "Verifies that the splash screen shows branding/loader state while services initialize before routing occurs.",
+    "category": "Splash Screen & Initialization",
+    "priority": "Low",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /splash"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"Splash screen\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"App logo\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"Loading indicator\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Edita Logistics\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC002",
+    "title": "Login succeeds and redirects to role-based dashboard",
+    "description": "Verifies a user can log in with valid credentials and is redirected to their role home screen.",
+    "category": "Authentication & Roles",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Login\" is visible"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_USER}}\" into the email field"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_PASSWORD}}\" into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Click on \"Login\" button"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL contains \"/client\""
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Shipments\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC003",
+    "title": "Login fails with invalid credentials and stays on login screen",
+    "description": "Verifies an invalid email/password shows an error message and does not navigate away from /login.",
+    "category": "Authentication & Roles",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Type \"nonexistent.user@example.com\" into the email field"
+      },
+      {
+        "type": "action",
+        "description": "Type \"WrongPassword123!\" into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Click on \"Login\" button"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Invalid\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL contains \"/login"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Login\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC004",
+    "title": "Login validation: submit with empty email shows validation message",
+    "description": "Verifies the login form prevents submission when email is empty and shows a visible validation error.",
+    "category": "Authentication & Roles",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_PASSWORD}}\" into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Click on \"Login\" button"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"email\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL contains \"/login"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Login\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC005",
+    "title": "Login validation: submit with empty password shows validation message",
+    "description": "Verifies the login form prevents submission when password is empty and shows a visible validation error.",
+    "category": "Authentication & Roles",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_USER}}\" into the email field"
+      },
+      {
+        "type": "action",
+        "description": "Click on \"Login\" button"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"password\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL contains \"/login"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Login\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC006",
+    "title": "Register a new Client account and reach the role-based destination",
+    "description": "Verifies registration with role selection creates an account and redirects to a client destination.",
+    "category": "Authentication & Roles",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /register"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Register\" is visible"
+      },
+      {
+        "type": "action",
+        "description": "Select \"Client\" from the role dropdown"
+      },
+      {
+        "type": "action",
+        "description": "Type \"Test Client\" into the name field"
+      },
+      {
+        "type": "action",
+        "description": "Type \"testsprite.client+1@example.com\" into the email field"
+      },
+      {
+        "type": "action",
+        "description": "Type \"Password123!\" into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Click on \"Register\" button"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL contains \"/client\""
+      }
+    ]
+  },
+  {
+    "id": "TC007",
+    "title": "Register a new Driver account and reach the role-based destination",
+    "description": "Verifies registration with Driver role redirects to the driver home screen.",
+    "category": "Authentication & Roles",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /register"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Register\" is visible"
+      },
+      {
+        "type": "action",
+        "description": "Select \"Driver\" from the role dropdown"
+      },
+      {
+        "type": "action",
+        "description": "Type \"Test Driver\" into the name field"
+      },
+      {
+        "type": "action",
+        "description": "Type \"testsprite.driver+1@example.com\" into the email field"
+      },
+      {
+        "type": "action",
+        "description": "Type \"Password123!\" into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Click on \"Register\" button"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL contains \"/driver\""
+      }
+    ]
+  },
+  {
+    "id": "TC008",
+    "title": "Register validation: missing role prevents account creation",
+    "description": "Verifies registration requires role selection and shows a visible error when role is not chosen.",
+    "category": "Authentication & Roles",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /register"
+      },
+      {
+        "type": "action",
+        "description": "Type \"No Role User\" into the name field"
+      },
+      {
+        "type": "action",
+        "description": "Type \"testsprite.norole@example.com\" into the email field"
+      },
+      {
+        "type": "action",
+        "description": "Type \"Password123!\" into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Click on \"Register\" button"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"role\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Register\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC009",
+    "title": "Update profile name and phone and see confirmation",
+    "description": "Verifies a logged-in user can update profile fields and receives a visible success confirmation.",
+    "category": "Authentication & Roles",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_USER}}\" into the email field"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_PASSWORD}}\" into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Click on \"Login\" button"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"Profile\" is visible"
+      },
+      {
+        "type": "action",
+        "description": "Click on \"Profile\""
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL contains \"/profile"
+      },
+      {
+        "type": "action",
+        "description": "Fill \"Updated Test Name\" into the name field"
+      },
+      {
+        "type": "action",
+        "description": "Fill \"5551234567\" into the phone field"
+      },
+      {
+        "type": "action",
+        "description": "Click on \"Save\" button"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Saved\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC010",
+    "title": "Sign out from profile redirects to login",
+    "description": "Verifies a logged-in user can sign out and is returned to the login screen.",
+    "category": "Authentication & Roles",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_USER}}\" into the email field"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_PASSWORD}}\" into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Click on \"Login\" button"
+      },
+      {
+        "type": "action",
+        "description": "Click on \"Profile\""
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL contains \"/profile"
+      },
+      {
+        "type": "action",
+        "description": "Click on \"Sign out\""
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL contains \"/login"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Login\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC011",
+    "title": "Create a new shipment end-to-end and verify it appears in Active shipments",
+    "description": "Verifies a client can create a shipment via the multi-step flow, calculate price, submit, and see it listed as active.",
+    "category": "Client Shipment Management",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_USER}}\" into the email/username field"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_PASSWORD}}\" into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Login\" button"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL contains \"/client\""
+      },
+      {
+        "type": "action",
+        "description": "Click the \"New Shipment\" button"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Select origin\" is visible"
+      },
+      {
+        "type": "action",
+        "description": "Click on the map to set the origin location"
+      }
+    ]
+  },
+  {
+    "id": "TC012",
+    "title": "Complete shipment creation: destination, price calculation, and submit confirmation",
+    "description": "Verifies destination selection, price calculation, review, submit, and successful creation confirmation.",
+    "category": "Client Shipment Management",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_USER}}\" into the email/username field"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_PASSWORD}}\" into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Login\" button"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL contains \"/client\""
+      },
+      {
+        "type": "action",
+        "description": "Click the \"New Shipment\" button"
+      },
+      {
+        "type": "action",
+        "description": "Click on the map to set the origin location"
+      },
+      {
+        "type": "action",
+        "description": "Click on the map to set the destination location"
+      }
+    ]
+  },
+  {
+    "id": "TC013",
+    "title": "Calculate price and submit shipment; verify new shipment listed in Active",
+    "description": "Verifies calculated price is shown, submission succeeds, and the new shipment appears in the active shipments list.",
+    "category": "Client Shipment Management",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_USER}}\" into the email/username field"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_PASSWORD}}\" into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Login\" button"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL contains \"/client\""
+      },
+      {
+        "type": "action",
+        "description": "Click the \"New Shipment\" button"
+      },
+      {
+        "type": "action",
+        "description": "Click on the map to set the origin location"
+      },
+      {
+        "type": "action",
+        "description": "Click on the map to set the destination location"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Calculate Price\" button"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Price\" is visible"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Confirm\" button"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Submit\" button"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Active\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC014",
+    "title": "Search shipments by query filters the client shipment list",
+    "description": "Verifies typing a search query filters visible shipments in the client dashboard list.",
+    "category": "Client Shipment Management",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_USER}}\" into the email/username field"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_PASSWORD}}\" into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Login\" button"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL contains \"/client\""
+      },
+      {
+        "type": "action",
+        "description": "Click into the \"Search\" field"
+      },
+      {
+        "type": "action",
+        "description": "Type \"test\" into the \"Search\" field"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"Shipments list\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC015",
+    "title": "Sort shipments by date updates the ordering",
+    "description": "Verifies selecting sort by date changes the shipment list ordering display.",
+    "category": "Client Shipment Management",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_USER}}\" into the email/username field"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_PASSWORD}}\" into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Login\" button"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL contains \"/client\""
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Sort\" control"
+      },
+      {
+        "type": "action",
+        "description": "Select \"Date\" from the sort dropdown"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Sorted by date\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC016",
+    "title": "Sort shipments by distance updates the ordering",
+    "description": "Verifies selecting sort by distance changes the shipment list ordering display.",
+    "category": "Client Shipment Management",
+    "priority": "Low",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_USER}}\" into the email/username field"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_PASSWORD}}\" into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Login\" button"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL contains \"/client\""
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Sort\" control"
+      },
+      {
+        "type": "action",
+        "description": "Select \"Distance\" from the sort dropdown"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Sorted by distance\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC017",
+    "title": "Sort shipments by price updates the ordering",
+    "description": "Verifies selecting sort by price changes the shipment list ordering display.",
+    "category": "Client Shipment Management",
+    "priority": "Low",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_USER}}\" into the email/username field"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_PASSWORD}}\" into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Login\" button"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL contains \"/client\""
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Sort\" control"
+      },
+      {
+        "type": "action",
+        "description": "Select \"Price\" from the sort dropdown"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Sorted by price\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC018",
+    "title": "Open tracking from client dashboard and verify core map elements render",
+    "description": "Verifies a client can open a shipment’s tracking screen and see factory/destination markers, route polyline, and ETA/distance UI.",
+    "category": "Real-time Shipment Tracking",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_USER}}\" into the email field"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_PASSWORD}}\" into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Click on the \"Log in\" button"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL contains \"/client\""
+      },
+      {
+        "type": "action",
+        "description": "Click on a shipment card in the shipments list"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL contains \"/client/tracking\""
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"Map\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC019",
+    "title": "Verify factory and destination markers are visible on the tracking map",
+    "description": "Verifies the tracking map displays both endpoints for the shipment route.",
+    "category": "Real-time Shipment Tracking",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_USER}}\" into the email field"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_PASSWORD}}\" into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Click on the \"Log in\" button"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL contains \"/client\""
+      },
+      {
+        "type": "action",
+        "description": "Click on a shipment card in the shipments list"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Factory\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Destination\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC020",
+    "title": "Verify route polyline renders on the tracking map",
+    "description": "Verifies the route line appears after directions are loaded.",
+    "category": "Real-time Shipment Tracking",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_USER}}\" into the email field"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_PASSWORD}}\" into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Click on the \"Log in\" button"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL contains \"/client\""
+      },
+      {
+        "type": "action",
+        "description": "Click on a shipment card in the shipments list"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Route\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"Route polyline\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC021",
+    "title": "Verify driver marker appears on the tracking map",
+    "description": "Verifies the tracking screen shows a driver/vehicle marker for the shipment.",
+    "category": "Real-time Shipment Tracking",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_USER}}\" into the email field"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_PASSWORD}}\" into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Click on the \"Log in\" button"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL contains \"/client\""
+      },
+      {
+        "type": "action",
+        "description": "Click on a shipment card in the shipments list"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Driver\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"Driver marker\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC022",
+    "title": "Verify ETA and distance are shown and update over time",
+    "description": "Verifies the UI displays ETA and distance and that values refresh during live tracking.",
+    "category": "Real-time Shipment Tracking",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_USER}}\" into the email field"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_PASSWORD}}\" into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Click on the \"Log in\" button"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL contains \"/client\""
+      },
+      {
+        "type": "action",
+        "description": "Click on a shipment card in the shipments list"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"ETA\" is visible"
+      },
+      {
+        "type": "action",
+        "description": "Wait for 10 seconds"
+      }
+    ]
+  },
+  {
+    "id": "TC023",
+    "title": "Open phase-aware status details from the ETA/info panel",
+    "description": "Verifies tapping the ETA/info panel reveals Factory Leg / Delivery Leg status and estimated arrival times.",
+    "category": "Real-time Shipment Tracking",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_USER}}\" into the email field"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_PASSWORD}}\" into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Click on the \"Log in\" button"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL contains \"/client\""
+      },
+      {
+        "type": "action",
+        "description": "Click on a shipment card in the shipments list"
+      },
+      {
+        "type": "action",
+        "description": "Click on the \"ETA\" panel"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Factory Leg\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC024",
+    "title": "Verify delivery leg details appear when viewing phase-aware status",
+    "description": "Verifies the status details include Delivery Leg and an estimated arrival time entry.",
+    "category": "Real-time Shipment Tracking",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_USER}}\" into the email field"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_PASSWORD}}\" into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Click on the \"Log in\" button"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL contains \"/client\""
+      },
+      {
+        "type": "action",
+        "description": "Click on a shipment card in the shipments list"
+      },
+      {
+        "type": "action",
+        "description": "Click on the \"Info\" panel"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Delivery Leg\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC025",
+    "title": "Close tracking and return to client dashboard",
+    "description": "Verifies the user can exit the tracking screen and return to the client dashboard.",
+    "category": "Real-time Shipment Tracking",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_USER}}\" into the email field"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_PASSWORD}}\" into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Click on the \"Log in\" button"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL contains \"/client\""
+      },
+      {
+        "type": "action",
+        "description": "Click on a shipment card in the shipments list"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL contains \"/client/tracking\""
+      },
+      {
+        "type": "action",
+        "description": "Click on the \"Close\" button"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL contains \"/client\""
+      }
+    ]
+  },
+  {
+    "id": "TC026",
+    "title": "Start and complete an assigned trip with pickup and delivery confirmations",
+    "description": "Verifies a driver can open an assigned shipment, start a trip, confirm pickup and delivery, and complete the trip with completed state visible in the UI.",
+    "category": "Driver Trip Management",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_USER}}\" into the email field"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_PASSWORD}}\" into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Log in\" button"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL contains \"/driver\""
+      },
+      {
+        "type": "action",
+        "description": "Click on an assigned shipment in the list"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"Start Trip\" is visible"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Start Trip\" button"
+      }
+    ]
+  },
+  {
+    "id": "TC027",
+    "title": "Trip map and navigation UI appear after starting a trip",
+    "description": "Verifies the live route/map and navigation-like UI elements become visible after starting a trip.",
+    "category": "Driver Trip Management",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_USER}}\" into the email field"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_PASSWORD}}\" into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Log in\" button"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL contains \"/driver\""
+      },
+      {
+        "type": "action",
+        "description": "Click on an assigned shipment in the list"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Start Trip\" button"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"Map\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC028",
+    "title": "Confirm Pickup transitions the trip into delivery phase",
+    "description": "Verifies tapping Confirm Pickup updates the UI to indicate the delivery phase is active.",
+    "category": "Driver Trip Management",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_USER}}\" into the email field"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_PASSWORD}}\" into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Log in\" button"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL contains \"/driver\""
+      },
+      {
+        "type": "action",
+        "description": "Click on an assigned shipment in the list"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Start Trip\" button"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Confirm Pickup\" button"
+      }
+    ]
+  },
+  {
+    "id": "TC029",
+    "title": "Confirm Delivery becomes available after pickup and advances toward completion",
+    "description": "Verifies the delivery confirmation step can be performed after pickup and the UI reflects delivery confirmation.",
+    "category": "Driver Trip Management",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_USER}}\" into the email field"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_PASSWORD}}\" into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Log in\" button"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL contains \"/driver\""
+      },
+      {
+        "type": "action",
+        "description": "Click on an assigned shipment in the list"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Start Trip\" button"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Confirm Pickup\" button"
+      }
+    ]
+  },
+  {
+    "id": "TC030",
+    "title": "Complete Trip finishes the workflow and returns driver to a completed state",
+    "description": "Verifies a driver can complete a trip and sees a visible indication that the trip is completed (or is returned to the driver home with completion reflected).",
+    "category": "Driver Trip Management",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_USER}}\" into the email field"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_PASSWORD}}\" into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Log in\" button"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL contains \"/driver\""
+      },
+      {
+        "type": "action",
+        "description": "Click on an assigned shipment in the list"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"Complete Trip\" is visible"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Complete Trip\" button"
+      }
+    ]
+  },
+  {
+    "id": "TC031",
+    "title": "Accept an available shipment and see it appear in assigned list",
+    "description": "Verifies a driver can accept an available shipment and then see it listed as assigned on the driver home screen.",
+    "category": "Driver Trip Management",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_USER}}\" into the email field"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_PASSWORD}}\" into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Log in\" button"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL contains \"/driver\""
+      },
+      {
+        "type": "action",
+        "description": "Click on an available shipment in the list"
+      },
+      {
+        "type": "action",
+        "description": "Click the \"Accept\" button"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Assigned\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC032",
+    "title": "Admin dashboard loads with summary stats, shipments list, drivers list, and allows sign out",
+    "description": "Verifies an authenticated admin can load the dashboard, view shipments and drivers sections, and successfully sign out to login.",
+    "category": "Admin Fleet Dashboard",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_USER}}\" into the email field"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_PASSWORD}}\" into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Click on the \"Sign in\" button"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL contains \"/admin\""
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Pending\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"In-transit\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Active drivers\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC033",
+    "title": "Browse shipments from admin dashboard and verify shipment fields are shown",
+    "description": "Verifies admin can open the Shipments list and see shipment rows showing origin, destination, and status.",
+    "category": "Admin Fleet Dashboard",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_USER}}\" into the email field"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_PASSWORD}}\" into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Click on the \"Sign in\" button"
+      },
+      {
+        "type": "action",
+        "description": "Click on the \"Shipments\" list or tab"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Origin\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Destination\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Status\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC034",
+    "title": "Browse online drivers from admin dashboard and verify contact/availability details are visible",
+    "description": "Verifies admin can open the Drivers list and see online drivers with availability and contact details.",
+    "category": "Admin Fleet Dashboard",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_USER}}\" into the email field"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_PASSWORD}}\" into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Click on the \"Sign in\" button"
+      },
+      {
+        "type": "action",
+        "description": "Click on the \"Drivers\" list or tab"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Online drivers\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Availability\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Contact\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC035",
+    "title": "Apply shipment status filter and verify filtered results reflect selected status",
+    "description": "Verifies admin can apply a shipment status filter and see the list update to match the selected status.",
+    "category": "Admin Fleet Dashboard",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_USER}}\" into the email field"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_PASSWORD}}\" into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Click on the \"Sign in\" button"
+      },
+      {
+        "type": "action",
+        "description": "Click on the shipment status filter control"
+      },
+      {
+        "type": "action",
+        "description": "Select \"In-transit\" from the dropdown"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"In-transit\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC036",
+    "title": "Clear or reset shipment status filter and verify shipments list returns to unfiltered view",
+    "description": "Verifies admin can clear the applied status filter and return to the default shipments list view.",
+    "category": "Admin Fleet Dashboard",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_USER}}\" into the email field"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_PASSWORD}}\" into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Click on the \"Sign in\" button"
+      },
+      {
+        "type": "action",
+        "description": "Click on the shipment status filter control"
+      },
+      {
+        "type": "action",
+        "description": "Select \"All\" from the dropdown"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Shipments\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"Shipments list\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC037",
+    "title": "Sign out from admin dashboard redirects to login",
+    "description": "Verifies that signing out from the admin dashboard ends the session and returns the user to the login screen.",
+    "category": "Admin Fleet Dashboard",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_USER}}\" into the email field"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{{LOGIN_PASSWORD}}\" into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Click on the \"Sign in\" button"
+      },
+      {
+        "type": "action",
+        "description": "Click on the \"Sign out\" button"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL contains \"/login\""
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Login\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC038",
+    "title": "Non-admin user is blocked from admin dashboard access",
+    "description": "Verifies a non-admin user cannot access the admin dashboard and is shown an unauthorized message before being redirected to login.",
+    "category": "Admin Fleet Dashboard",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Type \"nonadmin_user@example.com\" into the email field"
+      },
+      {
+        "type": "action",
+        "description": "Type \"WrongPassword123!\" into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Click on the \"Sign in\" button"
+      },
+      {
+        "type": "action",
+        "description": "Click on the \"Admin\" navigation item (if present)"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Unauthorized\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL contains \"/login\""
+      }
+    ]
+  }
+]
