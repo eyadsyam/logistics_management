@@ -87,27 +87,15 @@ class EditaFleetApp extends ConsumerWidget {
     // Watch auth to trigger rebuilds on auth state changes
     ref.watch(authNotifierProvider);
 
-    // Handle auth state changes for navigation
+    // Handle auth state changes — only update user state.
+    // Navigation is handled by GoRouter redirect, NOT here.
     ref.listen<AuthState>(authNotifierProvider, (previous, next) {
       next.whenOrNull(
         authenticated: (user) {
           ref.read(currentUserProvider.notifier).state = user;
-          // Navigate to role-based home
-          switch (user.role) {
-            case AppConstants.roleClient:
-              router.go('/client');
-              break;
-            case AppConstants.roleDriver:
-              router.go('/driver');
-              break;
-            case AppConstants.roleAdmin:
-              router.go('/admin');
-              break;
-          }
         },
         unauthenticated: () {
           ref.read(currentUserProvider.notifier).state = null;
-          router.go('/login');
         },
       );
     });

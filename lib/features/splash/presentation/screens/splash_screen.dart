@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:geolocator/geolocator.dart';
 
 import '../../../../app/providers/app_providers.dart';
 import '../../../../core/constants/app_colors.dart';
-import '../../../../core/constants/app_constants.dart';
+
+/// Provider that tracks whether the splash initialization is complete.
+/// GoRouter's redirect reads this to know when to navigate away from splash.
+final splashCompleteProvider = StateProvider<bool>((ref) => false);
 
 class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
@@ -37,31 +39,21 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
 
     _animController.forward();
 
-    // Start initialization
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _initializeApp();
-    });
+    // Fire-and-forget async initialization — no ref/context after any await
+    _initializeApp();
   }
 
   Future<void> _initializeApp() async {
-    // ── Cache everything from ref/context BEFORE any async gap ──
-    // The widget is guaranteed to be mounted at this point because
-    // this is called from addPostFrameCallback (sync, first frame).
-    final locService = ref.read(locationServiceProvider);
-    final currentUser = ref.read(currentUserProvider);
-    final router = GoRouter.of(context);
-
-    // 1. Minimum splash time for branding
+    // ── 1. Branding time ──
     await Future.delayed(const Duration(seconds: 2));
-    if (!mounted) return;
 
-    // 2. Request core permissions (Location)
+    // ── 2. Location permissions (best-effort, don't crash) ──
     try {
+      final locService = ref.read(locationServiceProvider);
       await locService.checkPermissions();
     } catch (_) {}
-    if (!mounted) return;
 
-    // 3. Trigger a first location fetch to warm up GPS
+    // ── 3. Warm up GPS (best-effort) ──
     try {
       await Geolocator.getCurrentPosition(
         locationSettings: const LocationSettings(
@@ -69,19 +61,10 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
         ),
       );
     } catch (_) {}
-    if (!mounted) return;
 
-    // 4. Navigate based on cached auth state
-    if (currentUser != null) {
-      if (currentUser.role == AppConstants.roleClient) {
-        router.go('/client');
-      } else if (currentUser.role == AppConstants.roleDriver) {
-        router.go('/driver');
-      } else {
-        router.go('/admin');
-      }
-    } else {
-      router.go('/login');
+    // ── 4. Signal completion — GoRouter redirect will navigate ──
+    if (mounted) {
+      ref.read(splashCompleteProvider.notifier).state = true;
     }
   }
 
@@ -93,6 +76,10 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
 
   @override
   Widget build(BuildContext context) {
+    // Watch the splash provider — when it becomes true, GoRouter
+    // redirect fires and navigates to the correct home/login screen.
+    ref.watch(splashCompleteProvider);
+
     return Scaffold(
       backgroundColor: Colors.white,
       body: Center(

@@ -19,6 +19,7 @@ import '../providers/app_providers.dart';
 final routerProvider = Provider<GoRouter>((ref) {
   ref.watch(authNotifierProvider);
   final currentUser = ref.watch(currentUserProvider);
+  final splashDone = ref.watch(splashCompleteProvider);
 
   return GoRouter(
     initialLocation: '/splash',
@@ -28,8 +29,15 @@ final routerProvider = Provider<GoRouter>((ref) {
       final isAuthRoute =
           state.uri.path == '/login' || state.uri.path == '/register';
 
-      // Keep them on Splash until initialization finishes and nav occurs
-      if (isSplash) return null;
+      // ── Stay on splash until initialization completes ──
+      if (isSplash) {
+        if (!splashDone) return null; // Keep showing splash
+        // Splash done — navigate to correct screen
+        if (currentUser != null) {
+          return _getHomeRoute(currentUser.role);
+        }
+        return '/login';
+      }
 
       // If authenticated and trying to hit auth routes, redirect to home
       if (currentUser != null && isAuthRoute) {
