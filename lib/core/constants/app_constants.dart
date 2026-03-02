@@ -44,7 +44,7 @@ class AppConstants {
       '/directions/v5/mapbox/driving';
   static const String mapboxOptimizationEndpoint =
       '/optimized-trips/v1/mapbox/driving';
-  static const String mapboxStyleUrl = 'mapbox://styles/mapbox/light-v11';
+  static const String mapboxStyleUrl = 'mapbox://styles/mapbox/streets-v12';
 
   // ── Offline Sync ──
   /// Maximum number of cached location points before forced sync
