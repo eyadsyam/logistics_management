@@ -40,7 +40,7 @@ class DefaultFirebaseOptions {
   // and it will auto-generate the correct appId for you.
   static const FirebaseOptions web = FirebaseOptions(
     apiKey: 'AIzaSyBu9YdcCx1vAuLt6ZvZHnyJMKbJm8c9xBs',
-    appId: '1:638909307298:web:05c4b74b509f8eb1cf7afb',
+    appId: '1:638909307298:web:e6b109a5f03f7e8dcf7afb',
     messagingSenderId: '638909307298',
     projectId: 'logistics-management-408b3',
     storageBucket: 'logistics-management-408b3.firebasestorage.app',
