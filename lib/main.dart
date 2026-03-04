@@ -14,6 +14,7 @@ import 'app/router/app_router.dart';
 import 'core/constants/app_constants.dart';
 import 'core/theme/app_theme.dart';
 import 'features/auth/presentation/state/auth_state.dart';
+import 'firebase_options.dart';
 
 /// Application entry point.
 /// Initializes Firebase, Hive, Mapbox, and environment variables.
@@ -41,8 +42,10 @@ Future<void> main() async {
       // Load environment variables
       await dotenv.load(fileName: '.env');
 
-      // Initialize Firebase
-      await Firebase.initializeApp();
+      // Initialize Firebase with platform-specific options
+      await Firebase.initializeApp(
+        options: DefaultFirebaseOptions.currentPlatform,
+      );
 
       // Initialize Hive for local caching (dead zone handling)
       await Hive.initFlutter();
