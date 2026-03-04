@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:ui';
 
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -50,9 +51,11 @@ Future<void> main() async {
       // Initialize Hive for local caching (dead zone handling)
       await Hive.initFlutter();
 
-      // Set Mapbox access token
-      final mapboxToken = dotenv.env['MAPBOX_ACCESS_TOKEN']?.trim() ?? '';
-      MapboxOptions.setAccessToken(mapboxToken);
+      // Set Mapbox access token (Mapbox Maps Flutter doesn't support Web)
+      if (!kIsWeb) {
+        final mapboxToken = dotenv.env['MAPBOX_ACCESS_TOKEN']?.trim() ?? '';
+        MapboxOptions.setAccessToken(mapboxToken);
+      }
 
       // System UI configuration for light theme
       SystemChrome.setSystemUIOverlayStyle(
